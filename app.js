@@ -1,13 +1,23 @@
 import express from "express";
 import mongoose from "mongoose"
 import "dotenv/config"
+import cookieParser from "cookie-parser";
+import cors from 'cors';
 
 import globalError from "./middlewares/error.middleware.js"
 import ApiError from "./utils/ApiError.js";
+import authRoute from "./routes/auth.route.js";
 import categoryRoutes from "./routes/category.route.js"
 
 const app = express();
 app.use(express.json())
+app.use(cookieParser());
+
+
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}))
 
 const connectDB = async () => {
   try {
@@ -24,6 +34,7 @@ const connectDB = async () => {
 await connectDB()
 
 // Routes
+app.use('/auth', authRoute);
 app.use("/categories", categoryRoutes)
 
 //invalid route
@@ -45,4 +56,9 @@ process.on("unhandledRejection", (err) => {
     process.exit(1);
   });
 });
+
+
+
+
+
 
