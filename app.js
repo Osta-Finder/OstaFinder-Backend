@@ -1,23 +1,24 @@
 import express from "express";
-import mongoose from "mongoose"
-import "dotenv/config"
+import mongoose from "mongoose";
+import "dotenv/config";
 import cookieParser from "cookie-parser";
-import cors from 'cors';
+import cors from "cors";
 
-import globalError from "./middlewares/error.middleware.js"
+import globalError from "./middlewares/error.middleware.js";
 import ApiError from "./utils/ApiError.js";
 import authRoute from "./routes/auth.route.js";
-import categoryRoutes from "./routes/category.route.js"
+import categoryRoutes from "./routes/category.route.js";
 
 const app = express();
-app.use(express.json())
+app.use(express.json());
 app.use(cookieParser());
 
-
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true
-}))
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  }),
+);
 
 const connectDB = async () => {
   try {
@@ -27,24 +28,24 @@ const connectDB = async () => {
     console.log("DB connection Failed");
     console.log(err.message);
 
-    process.exit(1)
+    process.exit(1);
   }
 };
 
-await connectDB()
+await connectDB();
 
 // Routes
-app.use('/auth', authRoute);
-app.use("/categories", categoryRoutes)
+app.use("/auth", authRoute);
+app.use("/categories", categoryRoutes);
 
 //invalid route
-app.use((req, res, next)=>{
-  next(new ApiError(`Not Found : ${req.originalUrl}`, 404))
-})
+app.use((req, res, next) => {
+  next(new ApiError(`Not Found : ${req.originalUrl}`, 404));
+});
 
 app.use(globalError);
 
-const port = process.env.PORT || 8000
+const port = process.env.PORT || 8000;
 const server = app.listen(port, () => {
   console.log(`server is running on port ${port}...`);
 });
@@ -56,9 +57,3 @@ process.on("unhandledRejection", (err) => {
     process.exit(1);
   });
 });
-
-
-
-
-
-
