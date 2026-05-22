@@ -1,10 +1,18 @@
 import jwt from 'jsonwebtoken';
 import User from "../models/user.model.js"
+import Worker from "../models/worker.model.js"
 import AppError from '../utils/app.Error.js';
 
 
 const register = async (req, res, next) => {
-    const user = await User.create(req.body);
+    let user;
+    console.log("done", req.body.role);
+    if (req.body.role === "worker") {
+        user = await Worker.create(req.body);
+    } else {
+        user = await User.create(req.body);
+
+    }
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
 
@@ -19,14 +27,24 @@ const register = async (req, res, next) => {
 };
 
 const login = async (req, res, next) => {
-    const { emailorPhone , password } = req.body;
-    console.log(password);
-    console.log(emailorPhone);
-    
-    const user = await User.findOne({ $or :[
-        {email : emailorPhone},
-        {phoneNumber : emailorPhone}
-    ] });
+    const { emailorPhone, password, role } = req.body;
+    let user;
+    if (role === "worker") {
+        user = await Worker.findOne({
+            $or: [
+                { email: emailorPhone },
+                { phoneNumber: emailorPhone }
+            ]
+        });
+    } else {
+        user = await User.findOne({
+            $or: [
+                { email: emailorPhone },
+                { phoneNumber: emailorPhone }
+            ]
+        });
+
+    }
     if (!user || !(await user.comparedPassword(password))) {
         return next(new AppError("invalid credintial", 401));
     }
@@ -55,7 +73,7 @@ const login = async (req, res, next) => {
             _id: user._id,
             name: user.name,
             email: user.email,
-            role : user.role,
+            role: user.role,
             phoneNumber: user.phoneNumber
         },
     });
@@ -96,16 +114,16 @@ const logout = (req, res) => {
     res.json({ message: "Logged out" });
 };
 
-const getMe = async (req, res) => {        
+const getMe = async (req, res) => {
     console.log(req.user);
-    
+
     const user = await User.findById(req.user.id);
     console.log(user);
     res.json({
         _id: user._id,
         name: user.name,
         email: user.email,
-        role : user.role ,
+        role: user.role,
         phoneNumber: user.phoneNumber
     });
 };

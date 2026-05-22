@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt'
 
-const userSchema = new mongoose.Schema({
+const workerSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema({
     },
     role : {
         type : String ,
-        default : "woreker",
+        default : "worker",
         required : true
     } ,
     refreshToken: {
@@ -33,27 +33,27 @@ const userSchema = new mongoose.Schema({
     timestamps: true
 });
 
-userSchema.pre("save", async function () {
+workerSchema.pre("save", async function () {
     if (!this.isModified("password")) return;
     this.password = await bcrypt.hash(this.password, 12);
 });
 
-userSchema.methods.comparedPassword = function (pass) {
+workerSchema.methods.comparedPassword = function (pass) {
     return bcrypt.compare(pass, this.password);
 };
 
 // access token vs refresh token
 
-userSchema.methods.generateAccessToken = function () {
+workerSchema.methods.generateAccessToken = function () {
     return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
         expiresIn: "15m",
     });
 };
 
-userSchema.methods.generateRefreshToken = function () {
+workerSchema.methods.generateRefreshToken = function () {
     return jwt.sign({ id: this._id }, process.env.JWT_SECRET_REFRSH, {
         expiresIn: "7d",
     });
 };
 
-export default mongoose.model("User", userSchema);
+export default mongoose.model("Worker", workerSchema);
