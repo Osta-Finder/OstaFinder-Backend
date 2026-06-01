@@ -32,7 +32,37 @@ export const getRequests = async (req, res, next) => {
         filter.status = mappedStatus;
       }
     }
+    if (req.query.user) {
+      filter.user = req.query.user;
+    }
     const requests = await Request.find(filter)
+      .populate("worker", "name phoneNumber")
+      .populate("user", "name phoneNumber")
+      .sort({ createdAt: -1 });
+
+    const result = requests.map((r) => ({
+      _id: r._id,
+      requestNumber: r.requestNumber,
+      service: r.service,
+      worker: r.worker,
+      user: r.user,
+      date: r.date,
+      amount: r.amount,
+      status: statusMap[r.status] || r.status,
+    }));
+
+    res.status(200).json({ success: true, count: result.length, data: result });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Get requests for the logged-in worker
+// @route   GET /requests/my-worker
+// @access  Private (worker)
+export const getMyWorkerRequests = async (req, res, next) => {
+  try {
+    const requests = await Request.find({ worker: req.user.id })
       .populate("worker", "name phoneNumber")
       .populate("user", "name phoneNumber")
       .sort({ createdAt: -1 });

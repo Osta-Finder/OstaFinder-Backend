@@ -3,6 +3,7 @@ import express from "express";
 import {
   getRequests,
   getRequestStats,
+  getMyWorkerRequests,
   getRequestById,
   createRequest,
   updateRequestStatus,
@@ -19,6 +20,7 @@ const router = express.Router();
 router.use(verifyToken);
 
 router.get("/stats", getRequestStats);
+router.get("/my-worker", getMyWorkerRequests);
 router
   .route("/")
   .get(getRequests)
