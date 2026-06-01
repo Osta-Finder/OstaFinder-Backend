@@ -1,4 +1,5 @@
 import Request from "../models/request.model.js";
+import Worker from "../models/worker.model.js";
 import ApiError from "../utils/ApiError.js";
 
 const statusMap = {
@@ -151,10 +152,16 @@ export const getRequestById = async (req, res, next) => {
 export const createRequest = async (req, res, next) => {
   try {
     const { service, worker, date, amount } = req.body;
+
+    const workerExists = await Worker.findById(worker);
+    if (!workerExists) {
+      return next(new ApiError("الصنايعي غير موجود", 404));
+    }
+
     const request = await Request.create({
       service,
       worker,
-      user: req.user.id,
+      user: req.query.user || req.user.id,
       date,
       amount,
     });

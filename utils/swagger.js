@@ -199,6 +199,16 @@ const options = {
           summary: "إنشاء طلب جديد",
           description: "إنشاء طلب خدمة جديد",
           security: [{ cookieAuth: [] }],
+          parameters: [
+            {
+              name: "user",
+              in: "query",
+              description: "اختياري - ID المستخدم (للتجربة في Swagger)، لو مفيهوش هياخد من التوكن",
+              schema: { type: "string" },
+              example: "6a1d0d12a0e18535a1179a0a",
+              required: false,
+            },
+          ],
           requestBody: {
             required: true,
             content: {
