@@ -1,4 +1,5 @@
 import Request from "../models/request.model.js";
+import Rating from "../models/rating.model.js";
 import Worker from "../models/worker.model.js";
 import ApiError from "../utils/ApiError.js";
 
@@ -41,6 +42,13 @@ export const getRequests = async (req, res, next) => {
       .populate("user", "name phoneNumber")
       .sort({ createdAt: -1 });
 
+    const requestIds = requests.map((r) => r._id);
+    const ratings = await Rating.find({ request: { $in: requestIds } }).select("stars comment createdAt request");
+    const ratingMap = {};
+    ratings.forEach((rt) => {
+      ratingMap[rt.request.toString()] = { _id: rt._id, stars: rt.stars, comment: rt.comment, createdAt: rt.createdAt };
+    });
+
     const result = requests.map((r) => ({
       _id: r._id,
       requestNumber: r.requestNumber,
@@ -50,6 +58,7 @@ export const getRequests = async (req, res, next) => {
       date: r.date,
       amount: r.amount,
       status: statusMap[r.status] || r.status,
+      rating: ratingMap[r._id.toString()] || null,
     }));
 
     res.status(200).json({ success: true, count: result.length, data: result });
@@ -68,6 +77,13 @@ export const getMyWorkerRequests = async (req, res, next) => {
       .populate("user", "name phoneNumber")
       .sort({ createdAt: -1 });
 
+    const requestIds = requests.map((r) => r._id);
+    const ratings = await Rating.find({ request: { $in: requestIds } }).select("stars comment createdAt request");
+    const ratingMap = {};
+    ratings.forEach((rt) => {
+      ratingMap[rt.request.toString()] = { _id: rt._id, stars: rt.stars, comment: rt.comment, createdAt: rt.createdAt };
+    });
+
     const result = requests.map((r) => ({
       _id: r._id,
       requestNumber: r.requestNumber,
@@ -77,6 +93,7 @@ export const getMyWorkerRequests = async (req, res, next) => {
       date: r.date,
       amount: r.amount,
       status: statusMap[r.status] || r.status,
+      rating: ratingMap[r._id.toString()] || null,
     }));
 
     res.status(200).json({ success: true, count: result.length, data: result });
@@ -128,6 +145,8 @@ export const getRequestById = async (req, res, next) => {
       return next(new ApiError("الطلب غير موجود", 404));
     }
 
+    const rating = await Rating.findOne({ request: req.params.id }).select("stars comment createdAt");
+
     res.status(200).json({
       success: true,
       data: {
@@ -139,6 +158,7 @@ export const getRequestById = async (req, res, next) => {
         date: request.date,
         amount: request.amount,
         status: statusMap[request.status] || request.status,
+        rating: rating || null,
       },
     });
   } catch (err) {
