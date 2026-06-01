@@ -24,7 +24,7 @@ const createRequestSchema = joi.object({
 const updateStatusSchema = joi.object({
   status: joi
     .string()
-    .valid("pending", "accepted", "inProgress", "completed", "rejected")
+    .valid("pending", "accepted", "in_progress", "completed", "rejected")
     .required()
     .messages({
       "any.only": "حالة غير صالحة",

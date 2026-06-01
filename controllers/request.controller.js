@@ -5,7 +5,7 @@ import ApiError from "../utils/ApiError.js";
 const statusMap = {
   pending: "معلقة",
   accepted: "مقبولة",
-  inProgress: "قيد التنفيذ",
+  in_progress: "قيد التنفيذ",
   completed: "مكتملة",
   rejected: "مرفوضة",
   cancelled: "ملغية",
@@ -15,7 +15,7 @@ const reverseStatusMap = {
   الكل: null,
   معلقة: "pending",
   مقبولة: "accepted",
-  "قيد التنفيذ": "inProgress",
+  "قيد التنفيذ": "in_progress",
   مكتملة: "completed",
   مرفوضة: "rejected",
   ملغية: "cancelled",
@@ -93,7 +93,7 @@ export const getRequestStats = async (req, res, next) => {
     const all = await Request.countDocuments();
     const pending = await Request.countDocuments({ status: "pending" });
     const accepted = await Request.countDocuments({ status: "accepted" });
-    const inProgress = await Request.countDocuments({ status: "inProgress" });
+    const in_progress = await Request.countDocuments({ status: "in_progress" });
     const completed = await Request.countDocuments({ status: "completed" });
     const rejected = await Request.countDocuments({ status: "rejected" });
     const cancelled = await Request.countDocuments({ status: "cancelled" });
@@ -104,7 +104,7 @@ export const getRequestStats = async (req, res, next) => {
         الكل: all,
         معلقة: pending,
         مقبولة: accepted,
-        "قيد التنفيذ": inProgress,
+        "قيد التنفيذ": in_progress,
         مكتملة: completed,
         مرفوضة: rejected,
         ملغية: cancelled,
