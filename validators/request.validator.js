@@ -14,6 +14,10 @@ const createRequestSchema = joi.object({
     "date.base": "التاريخ يجب أن يكون صحيحاً",
     "any.required": "التاريخ مطلوب",
   }),
+  address: joi.string().required().trim().messages({
+    "string.empty": "العنوان مطلوب",
+    "any.required": "العنوان مطلوب",
+  }),
   amount: joi.number().required().min(0).messages({
     "number.base": "المبلغ يجب أن يكون رقماً",
     "number.min": "المبلغ يجب أن يكون أكبر من صفر",

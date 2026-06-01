@@ -25,6 +25,11 @@ const requestSchema = new mongoose.Schema(
       type: Date,
       required: [true, "التاريخ مطلوب"],
     },
+    address: {
+      type: String,
+      required: [true, "العنوان مطلوب"],
+      trim: true,
+    },
     amount: {
       type: Number,
       required: [true, "المبلغ مطلوب"],

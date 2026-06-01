@@ -46,6 +46,7 @@ const options = {
               },
             },
             date: { type: "string", format: "date", example: "2026-05-20" },
+            address: { type: "string", example: "12 شارع النيل، المهندسين" },
             amount: { type: "number", example: 385 },
             status: {
               type: "string",
@@ -81,11 +82,12 @@ const options = {
         },
         CreateRequestInput: {
           type: "object",
-          required: ["service", "worker", "date", "amount"],
+          required: ["service", "worker", "date", "address", "amount"],
           properties: {
             service: { type: "string", example: "تصليح حنفية مطبخ" },
             worker: { type: "string", example: "6a1d1a1cec88395a3e2dadae" },
             date: { type: "string", format: "date", example: "2026-05-25" },
+            address: { type: "string", example: "12 شارع النيل، المهندسين" },
             amount: { type: "number", example: 385 },
           },
         },
@@ -157,8 +159,18 @@ const options = {
         get: {
           tags: ["Requests"],
           summary: "إحصائيات الطلبات",
-          description: "يعيد عدد الطلبات حسب كل حالة",
+          description: "حسب صلاحية المستخدم:\n- **client**: إحصائيات طلباته فقط\n- **admin**: إحصائيات كل الطلبات\n- **worker**: ممنوع (403)\n- يمكن تمرير `?user=id` يدوياً لإحصائيات مستخدم معين",
           security: [{ cookieAuth: [] }],
+          parameters: [
+            {
+              name: "user",
+              in: "query",
+              description: "اختياري - ID المستخدم (للتجربة)، يتجاوز صلاحية التوكن",
+              schema: { type: "string" },
+              example: "6a1d0d12a0e18535a1179a0a",
+              required: false,
+            },
+          ],
           responses: {
             200: {
               description: "إحصائيات الطلبات",
@@ -173,6 +185,9 @@ const options = {
                   },
                 },
               },
+            },
+            403: {
+              description: "الصنايعي لا يمكنه عرض الإحصائيات",
             },
           },
         },

@@ -1,5 +1,6 @@
 import Request from "../models/request.model.js";
 import Rating from "../models/rating.model.js";
+import User from "../models/user.model.js";
 import Worker from "../models/worker.model.js";
 import ApiError from "../utils/ApiError.js";
 
@@ -91,6 +92,7 @@ export const getMyWorkerRequests = async (req, res, next) => {
       worker: r.worker,
       user: r.user,
       date: r.date,
+      address: r.address,
       amount: r.amount,
       status: statusMap[r.status] || r.status,
       rating: ratingMap[r._id.toString()] || null,
@@ -107,13 +109,32 @@ export const getMyWorkerRequests = async (req, res, next) => {
 // @access  Private
 export const getRequestStats = async (req, res, next) => {
   try {
-    const all = await Request.countDocuments();
-    const pending = await Request.countDocuments({ status: "pending" });
-    const accepted = await Request.countDocuments({ status: "accepted" });
-    const in_progress = await Request.countDocuments({ status: "in_progress" });
-    const completed = await Request.countDocuments({ status: "completed" });
-    const rejected = await Request.countDocuments({ status: "rejected" });
-    const cancelled = await Request.countDocuments({ status: "cancelled" });
+    let filter = {};
+
+    if (req.query.user) {
+      filter.user = req.query.user;
+    } else {
+      const user = await User.findById(req.user.id);
+      if (user && user.role === "admin") {
+        // admin sees all
+      } else if (user && user.role === "client") {
+        filter.user = req.user.id;
+      } else {
+        const worker = await Worker.findById(req.user.id);
+        if (worker) {
+          return next(new ApiError("الصنايعي لا يمكنه عرض الإحصائيات", 403));
+        }
+        filter.user = req.user.id;
+      }
+    }
+
+    const all = await Request.countDocuments(filter);
+    const pending = await Request.countDocuments({ ...filter, status: "pending" });
+    const accepted = await Request.countDocuments({ ...filter, status: "accepted" });
+    const inProgress = await Request.countDocuments({ ...filter, status: "inProgress" });
+    const completed = await Request.countDocuments({ ...filter, status: "completed" });
+    const rejected = await Request.countDocuments({ ...filter, status: "rejected" });
+    const cancelled = await Request.countDocuments({ ...filter, status: "cancelled" });
 
     res.status(200).json({
       success: true,
@@ -121,7 +142,7 @@ export const getRequestStats = async (req, res, next) => {
         الكل: all,
         معلقة: pending,
         مقبولة: accepted,
-        "قيد التنفيذ": in_progress,
+        "قيد التنفيذ": inProgress,
         مكتملة: completed,
         مرفوضة: rejected,
         ملغية: cancelled,
@@ -156,6 +177,7 @@ export const getRequestById = async (req, res, next) => {
         worker: request.worker,
         user: request.user,
         date: request.date,
+        address: request.address,
         amount: request.amount,
         status: statusMap[request.status] || request.status,
         rating: rating || null,
@@ -171,7 +193,7 @@ export const getRequestById = async (req, res, next) => {
 // @access  Private
 export const createRequest = async (req, res, next) => {
   try {
-    const { service, worker, date, amount } = req.body;
+    const { service, worker, date, address, amount } = req.body;
 
     const workerExists = await Worker.findById(worker);
     if (!workerExists) {
@@ -183,6 +205,7 @@ export const createRequest = async (req, res, next) => {
       worker,
       user: req.query.user || req.user.id,
       date,
+      address,
       amount,
     });
 
@@ -196,6 +219,7 @@ export const createRequest = async (req, res, next) => {
         service: populated.service,
         worker: populated.worker,
         date: populated.date,
+        address: populated.address,
         amount: populated.amount,
         status: statusMap[populated.status],
       },
