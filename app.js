@@ -8,6 +8,7 @@ import globalError from "./middlewares/error.middleware.js";
 import ApiError from "./utils/ApiError.js";
 import authRoute from "./routes/auth.route.js";
 import categoryRoutes from "./routes/category.route.js";
+import requestRoutes from "./routes/request.route.js";
 
 const app = express();
 app.use(express.json());
@@ -37,6 +38,7 @@ await connectDB();
 // Routes
 app.use("/auth", authRoute);
 app.use("/categories", categoryRoutes);
+app.use("/requests", requestRoutes);
 
 //invalid route
 app.use((req, res, next) => {
