@@ -12,14 +12,22 @@ import ApiError from "./utils/ApiError.js";
 import authRoute from "./routes/auth.route.js";
 import categoryRoutes from "./routes/category.route.js";
 import requestRoutes from "./routes/request.route.js";
+import categoryRoute from "./routes/category.route.js";
+import workerRoute from "./routes/worker.route.js"
+import reqOrderRoute from "./routes/reqOrder.route.js"
 
 const app = express();
+app.set('query parser', 'extended');
 app.use(express.json());
 app.use(cookieParser());
 
+
 app.use(
   cors({
-    origin: ["http://localhost:5173","https://ostafinderuserfront.vercel.app/"],
+    origin: [
+      "http://localhost:5173",
+      "https://ostafinderuserfront.vercel.app/",
+    ],
     credentials: true,
   }),
 );
@@ -45,6 +53,9 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/auth", authRoute);
 app.use("/categories", categoryRoutes);
 app.use("/requests", requestRoutes);
+app.use("/categories", categoryRoute);
+app.use("/workers", workerRoute);
+app.use("/orders", reqOrderRoute)
 
 //invalid route
 app.use((req, res, next) => {
