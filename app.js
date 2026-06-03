@@ -4,9 +4,14 @@ import "dotenv/config";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./utils/swagger.js";
+
 import globalError from "./middlewares/error.middleware.js";
 import ApiError from "./utils/ApiError.js";
 import authRoute from "./routes/auth.route.js";
+import categoryRoutes from "./routes/category.route.js";
+import requestRoutes from "./routes/request.route.js";
 import categoryRoute from "./routes/category.route.js";
 import workerRoute from "./routes/worker.route.js"
 import reqOrderRoute from "./routes/reqOrder.route.js"
@@ -41,8 +46,13 @@ const connectDB = async () => {
 
 await connectDB();
 
+// Swagger
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Routes
 app.use("/auth", authRoute);
+app.use("/categories", categoryRoutes);
+app.use("/requests", requestRoutes);
 app.use("/categories", categoryRoute);
 app.use("/workers", workerRoute);
 app.use("/orders", reqOrderRoute)
