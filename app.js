@@ -7,22 +7,16 @@ import cors from "cors";
 import globalError from "./middlewares/error.middleware.js";
 import ApiError from "./utils/ApiError.js";
 import authRoute from "./routes/auth.route.js";
-import categoryRoute from "./routes/category.route.js";
-import workerRoute from "./routes/worker.route.js"
-import reqOrderRoute from "./routes/reqOrder.route.js"
+import categoryRoutes from "./routes/category.route.js";
+import workerRoutes from "./routes/worker.route.js";
 
 const app = express();
-app.set('query parser', 'extended');
 app.use(express.json());
 app.use(cookieParser());
 
-
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://ostafinderuserfront.vercel.app/",
-    ],
+    origin: ["http://localhost:5173","https://ostafinderuserfront.vercel.app/"],
     credentials: true,
   }),
 );
@@ -43,9 +37,8 @@ await connectDB();
 
 // Routes
 app.use("/auth", authRoute);
-app.use("/categories", categoryRoute);
-app.use("/workers", workerRoute);
-app.use("/orders", reqOrderRoute)
+app.use("/categories", categoryRoutes);
+app.use("/workers", workerRoutes);
 
 //invalid route
 app.use((req, res, next) => {

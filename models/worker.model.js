@@ -29,25 +29,6 @@ const workerSchema = new mongoose.Schema({
     refreshToken: {
         type: String,
     },
-    category:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-        required: [true, "يجب تحديد تصنيف الفني"]
-    },
-    price: {
-    type: Number,
-    required: [true, 'يجب تحديد السعر المبدئي للخدمة']
-  },
-  rating: {
-    type: Number,
-    default: 0,
-    min: [0, 'التقييم لا يمكن أن يكون أقل من 0'],
-    max: [5, 'التقييم لا يمكن أن يتجاوز 5']
-  },
-  isOnline: {
-    type: Boolean,
-    default: false
-  },
 }, {
     timestamps: true
 });
