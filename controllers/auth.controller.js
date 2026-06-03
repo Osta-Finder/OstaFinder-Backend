@@ -6,6 +6,7 @@ import AppError from '../utils/app.Error.js';
 
 const register = async (req, res, next) => {
     let user;
+    console.log("done", req.body.role);
     if (req.body.role === "worker") {
         user = await Worker.create(req.body);
     } else {
