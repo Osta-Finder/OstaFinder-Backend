@@ -20,9 +20,7 @@ const register = async (req, res, next) => {
     await user.save();
     res.status(201).json({
         message: "user created sucessfully",
-        user,
-        accessToken,
-        refreshToken,
+        user
     });
 };
 
@@ -80,7 +78,6 @@ const login = async (req, res, next) => {
 };
 
 const refreshToken = async (req, res, next) => {
-    console.log("refreshToken");
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
         return res.status(401).json({
@@ -108,17 +105,13 @@ const refreshToken = async (req, res, next) => {
 };
 
 const logout = (req, res) => {
-    console.log("logout");
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
     res.json({ message: "Logged out" });
 };
 
 const getMe = async (req, res) => {
-    console.log(req.user);
-
     const user = await User.findById(req.user.id);
-    console.log(user);
     res.json({
         _id: user._id,
         name: user.name,
