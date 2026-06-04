@@ -31,12 +31,12 @@ const workerSchema = new mongoose.Schema({
     },
     category:{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-        required: [true, "يجب تحديد تصنيف الفني"]
+        ref: "Category"
+        // required: [true, "يجب تحديد تصنيف الفني"]
     },
     price: {
-    type: Number,
-    required: [true, 'يجب تحديد السعر المبدئي للخدمة']
+    type: Number
+    // required: [true, 'يجب تحديد السعر المبدئي للخدمة']
   },
   rating: {
     type: Number,
