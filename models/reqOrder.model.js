@@ -36,6 +36,11 @@ const reqSchema = new mongoose.Schema(
       required: [true, " يرجى تحديد الموقع الجغرافي أو العنوان"],
       trim: true,
     },
+    urgency: {
+      type: String,
+      enum: ["normal", "urgent"],
+      default: "normal",
+    },
     status: {
       type: String,
       enum: ["pending", "accepted", "rejected", "completed", "cancelled"],

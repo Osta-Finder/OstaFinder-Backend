@@ -32,22 +32,55 @@ const workerSchema = new mongoose.Schema({
     category:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Category"
-        // required: [true, "يجب تحديد تصنيف الفني"]
     },
     price: {
-    type: Number
-    // required: [true, 'يجب تحديد السعر المبدئي للخدمة']
-  },
-  rating: {
-    type: Number,
-    default: 0,
-    min: [0, 'التقييم لا يمكن أن يكون أقل من 0'],
-    max: [5, 'التقييم لا يمكن أن يتجاوز 5']
-  },
-  isOnline: {
-    type: Boolean,
-    default: false
-  },
+        type: Number
+    },
+    rating: {
+        type: Number,
+        default: 0,
+        min: [0, 'التقييم لا يمكن أن يكون أقل من 0'],
+        max: [5, 'التقييم لا يمكن أن يتجاوز 5']
+    },
+    ratingsCount: {
+        type: Number,
+        default: 0,
+    },
+    isOnline: {
+        type: Boolean,
+        default: false
+    },
+    // ===== Worker Profile Fields =====
+    bio: {
+        type: String,
+        trim: true,
+        maxlength: [1000, "النبذة لا تتجاوز 1000 حرف"],
+    },
+    yearsOfExperience: {
+        type: Number,
+        min: [0, "سنوات الخبرة لا يمكن أن تكون سالبة"],
+        default: 0,
+    },
+    totalOrders: {
+        type: Number,
+        default: 0,
+    },
+    workingHours: {
+        from: { type: String, default: "08:00" },
+        to:   { type: String, default: "18:00" },
+    },
+    address: {
+        type: String,
+        trim: true,
+    },
+    profileImage: {
+        type: String,
+        trim: true,
+    },
+    tags: {
+        type: [String],
+        default: [],
+    },
 }, {
     timestamps: true
 });
