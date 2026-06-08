@@ -37,8 +37,12 @@ const requestSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "accepted", "in_progress", "completed", "rejected", "cancelled"],
+      enum: ["pending", "accepted", "on_the_way", "in_progress", "completed", "rejected", "cancelled"],
       default: "pending",
+    },
+    eta: {
+      type: String,
+      default: "",
     },
   },
   {
