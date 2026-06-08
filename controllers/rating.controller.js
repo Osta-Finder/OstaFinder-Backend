@@ -2,6 +2,9 @@ import Rating from "../models/rating.model.js";
 import Request from "../models/request.model.js";
 import ApiError from "../utils/ApiError.js";
 
+// @desc    Create rating for a request
+// @route   POST /requests/:id/rating
+// @access  Private
 export const createRating = async (req, res, next) => {
   try {
     const request = await Request.findById(req.params.id);
@@ -30,6 +33,9 @@ export const createRating = async (req, res, next) => {
   }
 };
 
+// @desc    Get rating for a request
+// @route   GET /requests/:id/rating
+// @access  Private
 export const getRating = async (req, res, next) => {
   try {
     const rating = await Rating.findOne({ request: req.params.id })
@@ -45,6 +51,9 @@ export const getRating = async (req, res, next) => {
   }
 };
 
+// @desc    Update rating for a request
+// @route   PATCH /requests/:id/rating
+// @access  Private
 export const updateRating = async (req, res, next) => {
   try {
     let rating = await Rating.findOne({ request: req.params.id });
@@ -62,6 +71,9 @@ export const updateRating = async (req, res, next) => {
   }
 };
 
+// @desc    Delete rating for a request
+// @route   DELETE /requests/:id/rating
+// @access  Private
 export const deleteRating = async (req, res, next) => {
   try {
     const rating = await Rating.findOneAndDelete({ request: req.params.id });
