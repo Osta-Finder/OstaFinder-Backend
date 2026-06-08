@@ -813,52 +813,6 @@ const options = {
           },
         },
       },
-      "/upload-test": {
-        post: {
-          tags: ["Upload"],
-          summary: "رفع ملف (عام)",
-          description: "يرفع صورة بدون مصادقة (للاختبار)",
-          requestBody: {
-            required: true,
-            content: {
-              "multipart/form-data": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    file: {
-                      type: "string",
-                      format: "binary",
-                      description: "الملف المراد رفعه",
-                    },
-                    bucket: {
-                      type: "string",
-                      description: "اسم الـ bucket (اختياري)",
-                      example: "images",
-                    },
-                  },
-                },
-              },
-            },
-          },
-          responses: {
-            200: {
-              description: "تم رفع الملف بنجاح",
-              content: {
-                "application/json": {
-                  schema: {
-                    type: "object",
-                    properties: {
-                      success: { type: "boolean", example: true },
-                      data: { $ref: "#/components/schemas/UploadResponse" },
-                    },
-                  },
-                },
-              },
-            },
-            400: { description: "لم يتم اختيار ملف" },
-          },
-        },
-      },
       // ==================== Requests (existing) ====================
       "/requests/stats": {
         get: {
