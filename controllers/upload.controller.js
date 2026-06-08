@@ -1,9 +1,6 @@
 import { supabase } from "../utils/supabaseClient.js";
 import ApiError from "../utils/ApiError.js";
 
-// @desc    Upload image to Supabase bucket
-// @route   POST /upload
-// @access  Private
 export const uploadImage = async (req, res, next) => {
   try {
     if (!req.file) {
@@ -43,9 +40,6 @@ export const uploadImage = async (req, res, next) => {
   }
 };
 
-// @desc    Get all images from Supabase bucket
-// @route   GET /upload
-// @access  Private
 export const getImages = async (req, res, next) => {
   try {
     const bucketName = req.query.bucket || "images";
@@ -77,9 +71,6 @@ export const getImages = async (req, res, next) => {
   }
 };
 
-// @desc    Delete image from Supabase bucket
-// @route   DELETE /upload
-// @access  Private
 export const deleteImage = async (req, res, next) => {
   try {
     const { path } = req.body;

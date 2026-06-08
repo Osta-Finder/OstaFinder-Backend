@@ -23,9 +23,6 @@ const reverseStatusMap = {
   ملغية: "cancelled",
 };
 
-// @desc    Get all requests with optional status filter
-// @route   GET /requests?status=pending
-// @access  Private
 export const getRequests = async (req, res, next) => {
   try {
     const filter = {};
@@ -68,9 +65,6 @@ export const getRequests = async (req, res, next) => {
   }
 };
 
-// @desc    Get requests for the logged-in worker
-// @route   GET /requests/my-worker
-// @access  Private (worker)
 export const getMyWorkerRequests = async (req, res, next) => {
   try {
     const requests = await Request.find({ worker: req.user.id })
@@ -104,9 +98,6 @@ export const getMyWorkerRequests = async (req, res, next) => {
   }
 };
 
-// @desc    Get request stats (count by status)
-// @route   GET /requests/stats
-// @access  Private
 export const getRequestStats = async (req, res, next) => {
   try {
     let filter = {};
@@ -153,9 +144,6 @@ export const getRequestStats = async (req, res, next) => {
   }
 };
 
-// @desc    Get single request by ID
-// @route   GET /requests/:id
-// @access  Private
 export const getRequestById = async (req, res, next) => {
   try {
     const request = await Request.findById(req.params.id)
@@ -188,9 +176,6 @@ export const getRequestById = async (req, res, next) => {
   }
 };
 
-// @desc    Create a new request
-// @route   POST /requests
-// @access  Private
 export const createRequest = async (req, res, next) => {
   try {
     const { service, worker, date, address, amount } = req.body;
@@ -229,9 +214,6 @@ export const createRequest = async (req, res, next) => {
   }
 };
 
-// @desc    Update request status
-// @route   PATCH /requests/:id/status
-// @access  Private
 export const updateRequestStatus = async (req, res, next) => {
   try {
     const request = await Request.findByIdAndUpdate(
@@ -257,9 +239,6 @@ export const updateRequestStatus = async (req, res, next) => {
   }
 };
 
-// @desc    Cancel a request (only if pending)
-// @route   PATCH /requests/:id/cancel
-// @access  Private
 export const cancelRequest = async (req, res, next) => {
   try {
     const request = await Request.findById(req.params.id);
