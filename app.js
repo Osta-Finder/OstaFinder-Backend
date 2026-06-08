@@ -13,10 +13,12 @@ import requestRoutes from "./routes/request.route.js";
 import categoryRoute from "./routes/category.route.js";
 import workerRoute from "./routes/worker.route.js"
 import reqOrderRoute from "./routes/reqOrder.route.js"
+import uploadRoute from "./routes/upload.route.js"
 
 const app = express();
 app.set('query parser', 'extended');
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
 
@@ -53,6 +55,7 @@ app.use("/requests", requestRoutes);
 app.use("/categories", categoryRoute);
 app.use("/workers", workerRoute);
 app.use("/orders", reqOrderRoute)
+app.use("/upload", uploadRoute)
 
 //invalid route
 app.use((req, res, next) => {
