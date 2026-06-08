@@ -111,7 +111,12 @@ const logout = (req, res) => {
 };
 
 const getMe = async (req, res) => {
-    const user = await User.findById(req.user.id);
+    const userId = req.user.id;
+    let user;
+    user = await User.findById(userId);
+    if (!user) {
+        user = await Worker.findById(userId);
+    }
     res.json({
         _id: user._id,
         name: user.name,
