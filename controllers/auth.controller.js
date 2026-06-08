@@ -6,7 +6,6 @@ import AppError from '../utils/app.Error.js';
 
 const register = async (req, res, next) => {
     let user;
-    console.log("done", req.body.role);
     if (req.body.role === "worker") {
         user = await Worker.create(req.body);
     } else {
@@ -86,7 +85,10 @@ const refreshToken = async (req, res, next) => {
     }
     const decodedToken = jwt.verify(refreshToken, process.env.JWT_SECRET_REFRSH);
 
-    const user = await User.findById(decodedToken.id);
+    let user = await User.findById(decodedToken.id);
+    if (!user) {
+        user = await Worker.findById(decodedToken.id);
+    }
 
     if (!user || user.refreshToken !== refreshToken) {
         return next(new AppError("invalid refresh token", 401));
@@ -111,7 +113,11 @@ const logout = (req, res) => {
 };
 
 const getMe = async (req, res) => {
-    const user = await User.findById(req.user.id);
+    let user = await User.findById(req.user.id);
+    if (!user) {
+        user = await Worker.findById(req.user.id);
+    }
+    console.log("user", user);
     res.json({
         _id: user._id,
         name: user.name,

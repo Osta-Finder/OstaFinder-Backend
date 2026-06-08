@@ -7,6 +7,7 @@ import ApiError from "../utils/ApiError.js";
 const statusMap = {
   pending: "معلقة",
   accepted: "مقبولة",
+  on_the_way: "في الطريق",
   in_progress: "قيد التنفيذ",
   completed: "مكتملة",
   rejected: "مرفوضة",
@@ -17,6 +18,7 @@ const reverseStatusMap = {
   الكل: null,
   معلقة: "pending",
   مقبولة: "accepted",
+  "في الطريق": "on_the_way",
   "قيد التنفيذ": "in_progress",
   مكتملة: "completed",
   مرفوضة: "rejected",
@@ -59,6 +61,7 @@ export const getRequests = async (req, res, next) => {
       date: r.date,
       amount: r.amount,
       status: statusMap[r.status] || r.status,
+      eta: r.eta || "",
       rating: ratingMap[r._id.toString()] || null,
     }));
 
@@ -95,6 +98,7 @@ export const getMyWorkerRequests = async (req, res, next) => {
       address: r.address,
       amount: r.amount,
       status: statusMap[r.status] || r.status,
+      eta: r.eta || "",
       rating: ratingMap[r._id.toString()] || null,
     }));
 
@@ -180,6 +184,7 @@ export const getRequestById = async (req, res, next) => {
         address: request.address,
         amount: request.amount,
         status: statusMap[request.status] || request.status,
+        eta: request.eta || "",
         rating: rating || null,
       },
     });
@@ -222,6 +227,7 @@ export const createRequest = async (req, res, next) => {
         address: populated.address,
         amount: populated.amount,
         status: statusMap[populated.status],
+        eta: populated.eta || "",
       },
     });
   } catch (err) {
@@ -234,9 +240,13 @@ export const createRequest = async (req, res, next) => {
 // @access  Private
 export const updateRequestStatus = async (req, res, next) => {
   try {
+    const updateData = { status: req.body.status };
+    if (req.body.eta !== undefined) {
+      updateData.eta = req.body.eta;
+    }
     const request = await Request.findByIdAndUpdate(
       req.params.id,
-      { status: req.body.status },
+      updateData,
       { new: true, runValidators: true },
     );
 
@@ -250,6 +260,7 @@ export const updateRequestStatus = async (req, res, next) => {
         _id: request._id,
         requestNumber: request.requestNumber,
         status: statusMap[request.status],
+        eta: request.eta || "",
       },
     });
   } catch (err) {
