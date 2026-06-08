@@ -1,130 +1,150 @@
-import jwt from 'jsonwebtoken';
-import User from "../models/user.model.js"
-import Worker from "../models/worker.model.js"
-import AppError from '../utils/app.Error.js';
+import jwt from "jsonwebtoken";
+import asyncHandler from "express-async-handler";
+
+import User from "../models/user.model.js";
+import Worker from "../models/worker.model.js";
+import ApiError from "../utils/ApiError.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utils/authToken.js";
 
 
-const register = async (req, res, next) => {
-    let user;
-    console.log("done", req.body.role);
-    if (req.body.role === "worker") {
-        user = await Worker.create(req.body);
-    } else {
-        user = await User.create(req.body);
+const register = asyncHandler(async (req, res, next) => {
+  let user;
+  //   console.log("done", req.body.role);
+  if (req.body.role === "worker") {
+    user = await Worker.create(req.body);
+  } else {
+    user = await User.create(req.body);
+  }
+  //   const accessToken = user.generateAccessToken();
+  //   const refreshToken = user.generateRefreshToken();
 
-    }
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
+  //   user.refreshToken = refreshToken;
+  //   await user.save();
+  res.status(201).json({
+    message: "user created sucessfully",
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phoneNumber: user.phoneNumber,
+    },
+  });
+});
 
-    user.refreshToken = refreshToken;
-    await user.save();
-    res.status(201).json({
-        message: "user created sucessfully",
-        user
+const login = asyncHandler(async (req, res, next) => {
+  const { emailorPhone, password, role } = req.body;
+  let user;
+  if (role === "worker") {
+    user = await Worker.findOne({
+      $or: [{ email: emailorPhone }, { phoneNumber: emailorPhone }],
     });
-};
-
-const login = async (req, res, next) => {
-    const { emailorPhone, password, role } = req.body;
-    let user;
-    if (role === "worker") {
-        user = await Worker.findOne({
-            $or: [
-                { email: emailorPhone },
-                { phoneNumber: emailorPhone }
-            ]
-        });
-    } else {
-        user = await User.findOne({
-            $or: [
-                { email: emailorPhone },
-                { phoneNumber: emailorPhone }
-            ]
-        });
-
-    }
-    if (!user || !(await user.comparedPassword(password))) {
-        return next(new AppError("invalid credintial", 401));
-    }
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
-    res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        maxAge: 15 * 60 * 1000,
+  } else {
+    user = await User.findOne({
+      $or: [{ email: emailorPhone }, { phoneNumber: emailorPhone }],
     });
+  }
+  if (!user || !(await user.comparedPassword(password))) {
+    return next(new ApiError("Invalid credentials", 401));
+  }
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
 
-    res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 15 * 60 * 1000,
+  });
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+  user.refreshToken = refreshToken;
+  //   user.accessToken = accessToken;
+  await user.save();
+
+  // console.log(req.cookies);
+
+  res.status(200).json({
+    message: "Logged in successfully",
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phoneNumber: user.phoneNumber,
+    },
+  });
+});
+
+const refreshTokenHandler = asyncHandler(async (req, res, next) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) {
+    return res.status(401).json({
+      message: "token expired",
     });
-    user.refreshToken = refreshToken;
-    user.accessToken = accessToken;
-    await user.save();
+  }
+  const decodedToken = jwt.verify(refreshToken, process.env.JWT_SECRET_REFRESH);
 
-    res.status(200).json({
-        message: "Logged in successfully",
-        user: {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            phoneNumber: user.phoneNumber
-        },
-    });
-};
+  let user;
 
-const refreshToken = async (req, res, next) => {
-    const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) {
-        return res.status(401).json({
-            message: "token expired"
-        });
-    }
-    const decodedToken = jwt.verify(refreshToken, process.env.JWT_SECRET_REFRSH);
+  if (decodedToken.role === "worker") {
+    user = await Worker.findById(decodedToken.id);
+  } else {
+    user = await User.findById(decodedToken.id);
+  }
 
-    const user = await User.findById(decodedToken.id);
+  if (!user || user.refreshToken !== refreshToken) {
+    return next(new ApiError("invalid refresh token", 401));
+  }
 
-    if (!user || user.refreshToken !== refreshToken) {
-        return next(new AppError("invalid refresh token", 401));
-    }
+  const newAccessToken = generateAccessToken(user);
 
-    const newAccessToken = user.generateAccessToken();
+  res.cookie("accessToken", newAccessToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 15 * 60 * 1000,
+  });
 
-    res.cookie("accessToken", newAccessToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        maxAge: 15 * 60 * 1000,
-    });
+  res.json({ message: "Token refreshed" });
+});
 
-    res.json({ message: "Token refreshed" });
-};
+const logout =asyncHandler(async (req, res) => {
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+  });
 
-const logout = (req, res) => {
-    res.clearCookie("accessToken");
-    res.clearCookie("refreshToken");
-    res.json({ message: "Logged out" });
-};
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+  });
+  req.user.refreshToken = null;
+    await req.user.save();
+  res.json({ message: "Logged out" });
+});
 
-const getMe = async (req, res) => {
-    const userId = req.user.id;
-    let user;
-    user = await User.findById(userId);
-    if (!user) {
-        user = await Worker.findById(userId);
-    }
-    res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        phoneNumber: user.phoneNumber
-    });
-};
+const getMe = asyncHandler(async (req, res) => {
+  //   const user = await User.findById(req.user.id);
+  //   console.log(req.user);
+  res.json({
+    _id: req.user._id,
+    name: req.user.name,
+    email: req.user.email,
+    role: req.user.role,
+    phoneNumber: req.user.phoneNumber,
+  });
+});
 
 
-export default { register, login, logout, getMe, refreshToken };
+export default { register, login, logout, getMe, refreshTokenHandler};

@@ -11,17 +11,18 @@ import {
   createCategoryValidator,
   updateCategoryValidator,
 } from "../validators/category.validator.js";
+import { protect, restrictTo } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
 router
   .route("/")
-  .get(getCategories)
-  .post(createCategoryValidator, createCategory);
+  .get( getCategories)
+  .post(protect, restrictTo("admin"), createCategoryValidator, createCategory);
 router
   .route("/:id")
   .get(getCategoryById)
-  .put(updateCategoryValidator, updateCategory)
-  .delete(deleteCategory);
+  .put(protect, restrictTo("admin"), updateCategoryValidator, updateCategory)
+  .delete(protect, restrictTo("admin"), deleteCategory);
 
 export default router;
