@@ -1,3 +1,5 @@
+import asyncHandler from "express-async-handler";
+
 import categoryModel from "../models/category.model.js";
 import workerModel from "../models/worker.model.js";
 import ApiFeatures from "../utils/ApiFeatures.js";
@@ -5,46 +7,7 @@ import ApiFeatures from "../utils/ApiFeatures.js";
 // @desc    Get list of workers with filtering, pagination, sorting, and search
 // @route   GET /workers
 // @access  Public
-// export const getWorkers = async (req, res, next) => {
-//   try {
-//     let filter = {};
-
-//     if (req.query.keyword) {
-//       const matchingCategories = await categoryModel.find({
-//         name: { $regex: req.query.keyword, $options: "i" },
-//       });
-
-//       const categoryIds = matchingCategories.map((cat) => cat._id);
-
-//       filter.$or = [
-//         { name: { $regex: req.query.keyword, $options: "i" } },
-//         { specialty: { $regex: req.query.keyword, $options: "i" } },
-//         { category: { $in: categoryIds } }, // 👈 السطر ده اللي هيجيب عمال الأرضيات مثلاً
-//       ];
-//     }
-
-//     const countDocuments = await workerModel.countDocuments(filter);
-
-//     const apiFeatures = new ApiFeatures(workerModel.find(filter), req.query)
-//       .filter()
-//       .sort()
-//       .paginate(countDocuments);
-
-//     const workers = await apiFeatures.mongooseQuery.populate("category", "name");
-
-//     res.status(200).json({
-//       success: true,
-//       results: workers.length,
-//       pagination: apiFeatures.paginationResult,
-//       data: workers,
-//     });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
-
-export const getWorkers = async (req, res, next) => {
-  try {
+export const getWorkers = asyncHandler(async (req, res, next) => {
     let filter = {};
     // Search
     if (req.query.keyword) {
@@ -92,16 +55,12 @@ export const getWorkers = async (req, res, next) => {
       pagination: apiFeatures.paginationResult,
       data: workers,
     });
-  } catch (err) {
-    next(err);
-  }
-};
+});
 
 // @desc    Get top rated worker in each category
 // @route   GET /workers/top-by-category
 // @access  Public
-export const getTopWorkersByCategory = async (req, res, next) => {
-  try {
+export const getTopWorkersByCategory = asyncHandler(async (req, res, next) => {
     const topWorkers = await workerModel.aggregate([
       { $sort: { rating: -1 } },
       {
@@ -133,7 +92,4 @@ export const getTopWorkersByCategory = async (req, res, next) => {
       results: topWorkers.length,
       data: topWorkers,
     });
-  } catch (err) {
-    next(err);
-  }
-};
+});

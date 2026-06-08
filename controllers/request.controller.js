@@ -1,3 +1,5 @@
+import asyncHandler from "express-async-handler";
+
 import Request from "../models/request.model.js";
 import Rating from "../models/rating.model.js";
 import User from "../models/user.model.js";
@@ -28,8 +30,7 @@ const reverseStatusMap = {
 // @desc    Get all requests with optional status filter
 // @route   GET /requests?status=pending
 // @access  Private
-export const getRequests = async (req, res, next) => {
-  try {
+export const getRequests = asyncHandler(async (req, res, next) => {
     const filter = {};
     if (req.query.status) {
       const mappedStatus = reverseStatusMap[req.query.status];
@@ -66,16 +67,12 @@ export const getRequests = async (req, res, next) => {
     }));
 
     res.status(200).json({ success: true, count: result.length, data: result });
-  } catch (err) {
-    next(err);
-  }
-};
+});
 
 // @desc    Get requests for the logged-in worker
 // @route   GET /requests/my-worker
 // @access  Private (worker)
-export const getMyWorkerRequests = async (req, res, next) => {
-  try {
+export const getMyWorkerRequests = asyncHandler(async (req, res, next) => {
     const requests = await Request.find({ worker: req.user.id })
       .populate("worker", "name phoneNumber")
       .populate("user", "name phoneNumber")
@@ -103,16 +100,12 @@ export const getMyWorkerRequests = async (req, res, next) => {
     }));
 
     res.status(200).json({ success: true, count: result.length, data: result });
-  } catch (err) {
-    next(err);
-  }
-};
+});
 
 // @desc    Get request stats (count by status)
 // @route   GET /requests/stats
 // @access  Private
-export const getRequestStats = async (req, res, next) => {
-  try {
+export const getRequestStats = asyncHandler(async (req, res, next) => {
     let filter = {};
 
     if (req.query.user) {
@@ -152,16 +145,12 @@ export const getRequestStats = async (req, res, next) => {
         ملغية: cancelled,
       },
     });
-  } catch (err) {
-    next(err);
-  }
-};
+});
 
 // @desc    Get single request by ID
 // @route   GET /requests/:id
 // @access  Private
-export const getRequestById = async (req, res, next) => {
-  try {
+export const getRequestById = asyncHandler(async (req, res, next) => {
     const request = await Request.findById(req.params.id)
       .populate("worker", "name phoneNumber")
       .populate("user", "name phoneNumber");
@@ -188,16 +177,12 @@ export const getRequestById = async (req, res, next) => {
         rating: rating || null,
       },
     });
-  } catch (err) {
-    next(err);
-  }
-};
+});
 
 // @desc    Create a new request
 // @route   POST /requests
 // @access  Private
-export const createRequest = async (req, res, next) => {
-  try {
+export const createRequest = asyncHandler(async (req, res, next) => {
     const { service, worker, date, address, amount } = req.body;
 
     const workerExists = await Worker.findById(worker);
@@ -230,20 +215,12 @@ export const createRequest = async (req, res, next) => {
         eta: populated.eta || "",
       },
     });
-  } catch (err) {
-    next(err);
-  }
-};
+});
 
 // @desc    Update request status
 // @route   PATCH /requests/:id/status
 // @access  Private
-export const updateRequestStatus = async (req, res, next) => {
-  try {
-    const updateData = { status: req.body.status };
-    if (req.body.eta !== undefined) {
-      updateData.eta = req.body.eta;
-    }
+export const updateRequestStatus = asyncHandler(async (req, res, next) => {
     const request = await Request.findByIdAndUpdate(
       req.params.id,
       updateData,
@@ -263,16 +240,12 @@ export const updateRequestStatus = async (req, res, next) => {
         eta: request.eta || "",
       },
     });
-  } catch (err) {
-    next(err);
-  }
-};
+});
 
 // @desc    Cancel a request (only if pending)
 // @route   PATCH /requests/:id/cancel
 // @access  Private
-export const cancelRequest = async (req, res, next) => {
-  try {
+export const cancelRequest = asyncHandler(async (req, res, next) => {
     const request = await Request.findById(req.params.id);
 
     if (!request) {
@@ -294,7 +267,4 @@ export const cancelRequest = async (req, res, next) => {
         status: statusMap[request.status],
       },
     });
-  } catch (err) {
-    next(err);
-  }
-};
+});
