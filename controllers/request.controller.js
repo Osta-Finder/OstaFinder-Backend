@@ -9,6 +9,7 @@ import ApiError from "../utils/ApiError.js";
 const statusMap = {
   pending: "معلقة",
   accepted: "مقبولة",
+  on_the_way: "في الطريق",
   in_progress: "قيد التنفيذ",
   completed: "مكتملة",
   rejected: "مرفوضة",
@@ -19,6 +20,7 @@ const reverseStatusMap = {
   الكل: null,
   معلقة: "pending",
   مقبولة: "accepted",
+  "في الطريق": "on_the_way",
   "قيد التنفيذ": "in_progress",
   مكتملة: "completed",
   مرفوضة: "rejected",
@@ -60,6 +62,7 @@ export const getRequests = asyncHandler(async (req, res, next) => {
       date: r.date,
       amount: r.amount,
       status: statusMap[r.status] || r.status,
+      eta: r.eta || "",
       rating: ratingMap[r._id.toString()] || null,
     }));
 
@@ -92,6 +95,7 @@ export const getMyWorkerRequests = asyncHandler(async (req, res, next) => {
       address: r.address,
       amount: r.amount,
       status: statusMap[r.status] || r.status,
+      eta: r.eta || "",
       rating: ratingMap[r._id.toString()] || null,
     }));
 
@@ -169,6 +173,7 @@ export const getRequestById = asyncHandler(async (req, res, next) => {
         address: request.address,
         amount: request.amount,
         status: statusMap[request.status] || request.status,
+        eta: request.eta || "",
         rating: rating || null,
       },
     });
@@ -207,6 +212,7 @@ export const createRequest = asyncHandler(async (req, res, next) => {
         address: populated.address,
         amount: populated.amount,
         status: statusMap[populated.status],
+        eta: populated.eta || "",
       },
     });
 });
@@ -217,7 +223,7 @@ export const createRequest = asyncHandler(async (req, res, next) => {
 export const updateRequestStatus = asyncHandler(async (req, res, next) => {
     const request = await Request.findByIdAndUpdate(
       req.params.id,
-      { status: req.body.status },
+      updateData,
       { new: true, runValidators: true },
     );
 
@@ -231,6 +237,7 @@ export const updateRequestStatus = asyncHandler(async (req, res, next) => {
         _id: request._id,
         requestNumber: request.requestNumber,
         status: statusMap[request.status],
+        eta: request.eta || "",
       },
     });
 });
