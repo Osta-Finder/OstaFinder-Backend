@@ -14,7 +14,6 @@ import categoryRoute from "./routes/category.route.js";
 import workerRoute from "./routes/worker.route.js"
 import reqOrderRoute from "./routes/reqOrder.route.js"
 import uploadRoute from "./routes/upload.route.js"
-import uploadPublicRoute from "./routes/upload-public.route.js"
 
 const app = express();
 app.set('query parser', 'extended');
@@ -57,7 +56,6 @@ app.use("/categories", categoryRoute);
 app.use("/workers", workerRoute);
 app.use("/orders", reqOrderRoute)
 app.use("/upload", uploadRoute)
-app.use("/upload-test", uploadPublicRoute)
 
 //invalid route
 app.use((req, res, next) => {
