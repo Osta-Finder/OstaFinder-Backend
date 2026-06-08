@@ -3,10 +3,8 @@ import mongoose from "mongoose";
 import "dotenv/config";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./utils/swagger.js";
-
 import globalError from "./middlewares/error.middleware.js";
 import ApiError from "./utils/ApiError.js";
 import authRoute from "./routes/auth.route.js";
@@ -51,7 +49,6 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Routes
 app.use("/auth", authRoute);
-app.use("/categories", categoryRoutes);
 app.use("/requests", requestRoutes);
 app.use("/categories", categoryRoute);
 app.use("/workers", workerRoute);
