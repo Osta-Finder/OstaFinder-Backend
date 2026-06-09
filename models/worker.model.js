@@ -11,11 +11,12 @@ const workerSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
+        sparse: true,
+        lowercase: true,
     },
     phoneNumber: {
         type: String,
-        unique: true,
-        required: true
+        required: true,
     },
     password: {
         type: String,
@@ -27,6 +28,9 @@ const workerSchema = new mongoose.Schema({
         required: true
     },
     refreshToken: {
+        type: String,
+    },
+    image: {
         type: String,
     },
     category: {
@@ -48,6 +52,27 @@ const workerSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    address: {
+        type: String,
+    },
+    city: {
+        type: String,
+    },
+    yearsOfExperience: {
+        type: Number,
+    },
+    bio: {
+        type: String,
+    },
+    profilePicture: {
+        type: String,
+    },
+    nationalId: {
+        type: String,
+    },
+    certificates: [{
+        type: String,
+    }],
 }, {
     timestamps: true
 });

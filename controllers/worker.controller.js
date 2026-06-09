@@ -93,3 +93,184 @@ export const getTopWorkersByCategory = asyncHandler(async (req, res, next) => {
       data: topWorkers,
     });
 });
+
+
+export const submitOnboarding = asyncHandler(async (req, res, next) => {
+  try {
+    console.log("Request body:", req.body);
+    console.log("Request files:", req.files);
+    
+    const { firstName, lastName, email, phone, city, address, specialization, yearsOfExperience, bio } = req.body;
+    
+    if (!firstName || !lastName || !email || !phone) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields"
+      });
+    }
+
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authenticated"
+      });
+    }
+
+    const workerId = req.user._id;
+
+    const updateData = {
+      name: `${firstName} ${lastName}`,
+      email: email,
+      phoneNumber: phone,
+    };
+
+    if (specialization) {
+      let categoryId = null;
+      
+      const isValidObjectId = specialization.match(/^[0-9a-fA-F]{24}$/);
+      
+      if (isValidObjectId) {
+        categoryId = specialization;
+      } else {
+        const category = await categoryModel.findOne({ name: specialization });
+        if (category) {
+          categoryId = category._id;
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: `Category "${specialization}" not found`
+          });
+        }
+      }
+      
+      updateData.category = categoryId;
+    }
+    
+    if (yearsOfExperience) {
+      updateData.yearsOfExperience = yearsOfExperience;
+    }
+    if (bio) {
+      updateData.bio = bio;
+    }
+    if (address) {
+      updateData.address = address;
+    }
+    if (city) {
+      updateData.city = city;
+    }
+
+    if (req.files && req.files.length > 0) {
+      console.log("Processing files...", req.files.length);
+      const { supabase } = await import("../utils/supabaseClient.js");
+      
+      // Initialize certificates array
+      updateData.certificates = [];
+      
+      for (let file of req.files) {
+        console.log(`Processing file: ${file.fieldname} - ${file.originalname}`);
+        const timestamp = Date.now();
+        const ext = file.originalname.split(".").pop();
+        const fileName = `${file.fieldname}-${workerId}-${timestamp}.${ext}`;
+        
+        try {
+          // Upload file to Supabase
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from("images")
+            .upload(fileName, file.buffer, {
+              contentType: file.mimetype,
+              upsert: false,
+            });
+
+          if (uploadError) {
+            console.error(`Upload error for ${file.fieldname}:`, uploadError);
+            throw new Error(`Failed to upload ${file.fieldname}: ${uploadError.message}`);
+          }
+
+          console.log(`File uploaded successfully: ${fileName}`);
+
+          // Get public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from("images")
+            .getPublicUrl(fileName);
+          
+          console.log(`Public URL: ${publicUrl}`);
+          
+          if (file.fieldname === "nationalId") {
+            updateData.nationalId = publicUrl;
+            console.log(`National ID saved: ${publicUrl}`);
+          } else if (file.fieldname === "certificates") {
+            updateData.certificates.push(publicUrl);
+            console.log(`Certificate saved: ${publicUrl}`);
+          }
+        } catch (err) {
+          console.error(`Error uploading ${file.fieldname}:`, err.message);
+          throw err;
+        }
+      }
+      
+      console.log("All files processed. Certificates array:", updateData.certificates);
+    } else {
+      console.log("No files received");
+      updateData.certificates = [];
+    }
+
+    console.log("Update data:", updateData);
+
+    const updatedWorker = await workerModel.findByIdAndUpdate(
+      workerId,
+      { $set: updateData },
+      { new: true, runValidators: false }
+    ).populate('category', 'name');
+
+    if (!updatedWorker) {
+      return res.status(404).json({
+        success: false,
+        message: "Worker not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Onboarding completed successfully",
+      data: updatedWorker
+    });
+  } catch (error) {
+    console.error("Onboarding error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error submitting onboarding"
+    });
+  }
+});
+
+
+export const getWorkerProfile = asyncHandler(async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authenticated"
+      });
+    }
+
+    const worker = await workerModel.findById(req.user._id).populate('category', 'name');
+
+    if (!worker) {
+      return res.status(404).json({
+        success: false,
+        message: "Worker not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: worker
+    });
+  } catch (error) {
+    console.error("Get worker profile error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error fetching worker profile"
+    });
+  }
+});

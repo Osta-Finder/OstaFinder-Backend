@@ -12,17 +12,13 @@ import {
 
 const register = asyncHandler(async (req, res, next) => {
   let user;
-  //   console.log("done", req.body.role);
+  
   if (req.body.role === "worker") {
     user = await Worker.create(req.body);
   } else {
     user = await User.create(req.body);
   }
-  //   const accessToken = user.generateAccessToken();
-  //   const refreshToken = user.generateRefreshToken();
 
-  //   user.refreshToken = refreshToken;
-  //   await user.save();
   res.status(201).json({
     message: "user created sucessfully",
     user: {
@@ -67,10 +63,7 @@ const login = asyncHandler(async (req, res, next) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
   user.refreshToken = refreshToken;
-  //   user.accessToken = accessToken;
   await user.save();
-
-  // console.log(req.cookies);
 
   res.status(200).json({
     message: "Logged in successfully",
@@ -135,8 +128,6 @@ const logout =asyncHandler(async (req, res) => {
 });
 
 const getMe = asyncHandler(async (req, res) => {
-  //   const user = await User.findById(req.user.id);
-  //   console.log(req.user);
   res.json({
     _id: req.user._id,
     name: req.user.name,
@@ -145,6 +136,5 @@ const getMe = asyncHandler(async (req, res) => {
     phoneNumber: req.user.phoneNumber,
   });
 });
-
 
 export default { register, login, logout, getMe, refreshTokenHandler};
