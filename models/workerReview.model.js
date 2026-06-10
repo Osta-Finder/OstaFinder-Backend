@@ -1,9 +1,5 @@
 import mongoose from "mongoose";
 
-/**
- * WorkerReview — تقييمات العملاء على الفني مباشرة
- * مرتبطة بـ Order مكتمل لمنع التلاعب
- */
 const workerReviewSchema = new mongoose.Schema(
   {
     worker: {
@@ -20,7 +16,7 @@ const workerReviewSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Order",
       required: [true, "يجب ربط التقييم بطلب مكتمل"],
-      unique: true, // طلب واحد = تقييم واحد بس
+      unique: true,
     },
     stars: {
       type: Number,
@@ -37,7 +33,7 @@ const workerReviewSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// بعد كل تقييم جديد أو تعديل، نحدث متوسط تقييم الفني
+// بعد كل تقييم يتحسب متوسط تقييم الفني تلقائياً
 workerReviewSchema.statics.calcAverageRating = async function (workerId) {
   const result = await this.aggregate([
     { $match: { worker: workerId } },

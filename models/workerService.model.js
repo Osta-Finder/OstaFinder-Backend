@@ -1,9 +1,5 @@
 import mongoose from "mongoose";
 
-/**
- * WorkerService — الخدمات المتاحة للحجز عند فني معين
- * كل فني ممكن يكون عنده أكتر من خدمة، كل خدمة بسعر وتصنيف
- */
 const workerServiceSchema = new mongoose.Schema(
   {
     worker: {

@@ -2,42 +2,44 @@ import express from "express";
 import { getTopWorkersByCategory, getWorkers } from "../controllers/worker.controller.js";
 import {
   getWorkerProfile,
-
+  updateWorkerProfile,
   getWorkerServices,
- 
-
- 
+  addWorkerService,
+  updateWorkerService,
+  deleteWorkerService,
   getWorkerPortfolio,
-
-
+  addPortfolioItem,
+  deletePortfolioItem,
   getWorkerReviews,
-
-
-  bookWorkerService,
+  addWorkerReview,
+  deleteWorkerReview,
 } from "../controllers/workerProfile.controller.js";
 import verifyToken from "../middlewares/verify.middleware.js";
 
 const router = express.Router();
 
-// ─── Public Routes ───────────────────────────────────────────
+// ── Public ──────────────────────────────────
 router.get("/top-by-category", getTopWorkersByCategory);
 router.get("/", getWorkers);
 
-// ─── Worker Profile ──────────────────────────────────────────
+// ── Profile ─────────────────────────────────
 router.get("/:id/profile", getWorkerProfile);
+router.put("/:id/profile", verifyToken, updateWorkerProfile);
 
-// ─── Worker Services ─────────────────────────────────────────
+// ── Services ────────────────────────────────
 router.get("/:id/services", getWorkerServices);
+router.post("/:id/services", verifyToken, addWorkerService);
+router.put("/:id/services/:serviceId", verifyToken, updateWorkerService);
+router.delete("/:id/services/:serviceId", verifyToken, deleteWorkerService);
 
-
-// ─── Worker Portfolio ────────────────────────────────────────
+// ── Portfolio ───────────────────────────────
 router.get("/:id/portfolio", getWorkerPortfolio);
+router.post("/:id/portfolio", verifyToken, addPortfolioItem);
+router.delete("/:id/portfolio/:itemId", verifyToken, deletePortfolioItem);
 
-// ─── Worker Reviews ──────────────────────────────────────────
+// ── Reviews ─────────────────────────────────
 router.get("/:id/reviews", getWorkerReviews);
-
-
-// ─── Quick Booking ───────────────────────────────────────────
-router.post("/:id/book", verifyToken, bookWorkerService);
+router.post("/:id/reviews", verifyToken, addWorkerReview);
+router.delete("/:id/reviews/:reviewId", verifyToken, deleteWorkerReview);
 
 export default router;

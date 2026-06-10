@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
 
-/**
- * WorkerPortfolio — معرض الأعمال السابقة للفني
- */
 const workerPortfolioSchema = new mongoose.Schema(
   {
     worker: {

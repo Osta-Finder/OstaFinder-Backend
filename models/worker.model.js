@@ -21,15 +21,15 @@ const workerSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    role : {
-        type : String ,
-        default : "worker",
-        required : true
-    } ,
+    role: {
+        type: String,
+        default: "worker",
+        required: true
+    },
     refreshToken: {
         type: String,
     },
-    category:{
+    category: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Category"
     },
@@ -50,7 +50,7 @@ const workerSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    // ===== Worker Profile Fields =====
+    // ── Profile Fields ──────────────────────────
     bio: {
         type: String,
         trim: true,
@@ -58,8 +58,8 @@ const workerSchema = new mongoose.Schema({
     },
     yearsOfExperience: {
         type: Number,
-        min: [0, "سنوات الخبرة لا يمكن أن تكون سالبة"],
         default: 0,
+        min: [0, "سنوات الخبرة لا يمكن أن تكون سالبة"],
     },
     totalOrders: {
         type: Number,
@@ -93,8 +93,6 @@ workerSchema.pre("save", async function () {
 workerSchema.methods.comparedPassword = function (pass) {
     return bcrypt.compare(pass, this.password);
 };
-
-// access token vs refresh token
 
 workerSchema.methods.generateAccessToken = function () {
     return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
