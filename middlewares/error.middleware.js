@@ -17,13 +17,19 @@ const sendErrorForProd = (err, res) => {
     });
   }
 
-  console.error("ERROR 💥", err);
+  console.error("ERROR ", err);
 
   res.status(500).json({
     status: "error",
     message: "Something went wrong",
   });
 };
+
+const handleJWTError = () =>
+  new ApiError("التوكن غير صالح, يرجى اعادة تسجيل الدخول", 401);
+
+const handleJWTExpiredError = () =>
+  new ApiError("انتهت صلاحية التوكن, يرجى اعادة تسجيل الدخول", 401);
 
 const globalError = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
@@ -32,6 +38,11 @@ const globalError = (err, req, res, next) => {
   if (process.env.NODE_ENV === "development") {
     sendErrorForDev(err, res);
   } else {
+    if (err.name === "JsonWebTokenError") {
+      err = handleJWTError();
+    } else if (err.name === "TokenExpiredError") {
+      err = handleJWTExpiredError();
+    }
     sendErrorForProd(err, res);
   }
 };

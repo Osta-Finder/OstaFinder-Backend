@@ -23,6 +23,38 @@ export const getDashboardStats = async (req, res, next) => {
         $match: {
           worker: new mongoose.Types.ObjectId(workerId),
           source: "platform",
+import asyncHandler from "express-async-handler";
+
+import categoryModel from "../models/category.model.js";
+import workerModel from "../models/worker.model.js";
+import ApiFeatures from "../utils/ApiFeatures.js";
+
+// @desc    Get list of workers with filtering, pagination, sorting, and search
+// @route   GET /workers
+// @access  Public
+export const getWorkers = asyncHandler(async (req, res, next) => {
+    let filter = {};
+    // Search
+    if (req.query.keyword) {
+      const matchingCategories = await categoryModel
+        .find({
+          name: { $regex: req.query.keyword, $options: "i" },
+        })
+        .select("_id");
+
+      const categoryIds = matchingCategories.map((cat) => cat._id);
+
+      filter.$or = [
+        {
+          name: {
+            $regex: req.query.keyword,
+            $options: "i",
+          },
+        },
+        {
+          category: {
+            $in: categoryIds,
+          },
         },
       },
       { $group: { _id: null, total: { $sum: "$price" } } },
@@ -221,6 +253,37 @@ export const getWorkerWorkById = async (req, res, next) => {
     const { id } = req.params;
     const workerId = req.user.id;
     const work = await Portfolio.findOne({ _id: id, worker: workerId });
+});
+
+// @desc    Get top rated worker in each category
+// @route   GET /workers/top-by-category
+// @access  Public
+export const getTopWorkersByCategory = asyncHandler(async (req, res, next) => {
+    const topWorkers = await workerModel.aggregate([
+      { $sort: { rating: -1 } },
+      {
+        $group: {
+          _id: "$category",
+          worker: { $first: "$$ROOT" },
+        },
+      },
+      {
+        $replaceRoot: { newRoot: "$worker" },
+      },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category",
+        },
+      },
+      { $unwind: "$category" },
+      {
+        $sort: { rating: -1 },
+      },
+      { $limit: 6 },
+    ]);
 
     if (!work) {
       return next(new ApiError("Work not found", 404));
@@ -328,3 +391,4 @@ export const deleteWorkerWork = async (req, res, next) => {
     next(error);
   }
 };
+});

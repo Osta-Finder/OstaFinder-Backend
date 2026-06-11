@@ -21,13 +21,32 @@ const workerSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    role : {
-        type : String ,
-        default : "worker",
-        required : true
-    } ,
+    role: {
+        type: String,
+        default: "worker",
+        required: true
+    },
     refreshToken: {
         type: String,
+    },
+    category: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
+        // required: [true, "يجب تحديد تصنيف الفني"]
+    },
+    price: {
+        type: Number,
+        // required: [true, 'يجب تحديد السعر المبدئي للخدمة']
+    },
+    rating: {
+        type: Number,
+        default: 0,
+        min: [0, 'التقييم لا يمكن أن يكون أقل من 0'],
+        max: [5, 'التقييم لا يمكن أن يتجاوز 5']
+    },
+    isOnline: {
+        type: Boolean,
+        default: false
     },
 }, {
     timestamps: true
@@ -44,16 +63,16 @@ workerSchema.methods.comparedPassword = function (pass) {
 
 // access token vs refresh token
 
-workerSchema.methods.generateAccessToken = function () {
-    return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-        expiresIn: "15m",
-    });
-};
+// workerSchema.methods.generateAccessToken = function () {
+//     return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+//         expiresIn: "15m",
+//     });
+// };
 
-workerSchema.methods.generateRefreshToken = function () {
-    return jwt.sign({ id: this._id }, process.env.JWT_SECRET_REFRSH, {
-        expiresIn: "7d",
-    });
-};
+// workerSchema.methods.generateRefreshToken = function () {
+//     return jwt.sign({ id: this._id }, process.env.JWT_SECRET_REFRSH, {
+//         expiresIn: "7d",
+//     });
+// };
 
 export default mongoose.model("Worker", workerSchema);

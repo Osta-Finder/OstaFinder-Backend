@@ -28,12 +28,13 @@ const createRequestSchema = joi.object({
 const updateStatusSchema = joi.object({
   status: joi
     .string()
-    .valid("pending", "accepted", "in_progress", "completed", "rejected")
+    .valid("pending", "accepted", "on_the_way", "in_progress", "completed", "rejected")
     .required()
     .messages({
       "any.only": "حالة غير صالحة",
       "any.required": "الحالة مطلوبة",
     }),
+  eta: joi.string().allow("").optional(),
 });
 
 export const createRequestValidator = validatorMiddleware(createRequestSchema);

@@ -41,16 +41,28 @@ const requestSchema = new mongoose.Schema({
         required: true,
     },
     status: {
-        type: String,
-        enum: ["pending", "accepted", "awaiting_approval", "in_progress", "completed", "cancelled", "rejected"],
-        default: "pending",
+      type: String,
+      enum: ["pending", "accepted", "on_the_way", "in_progress", "completed", "rejected", "cancelled"],
+      default: "pending",
     },
-    timeAgo: {
-        type: String,
-        default: "Recently",
-    }
-}, {
-    timestamps: true
+    eta: {
+      type: String,
+      default: "",
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+requestSchema.pre("save", async function () {
+  if (this.isNew && !this.requestNumber) {
+    const lastRequest = await mongoose
+      .model("Request")
+      .findOne()
+      .sort({ requestNumber: -1 });
+    this.requestNumber = lastRequest ? lastRequest.requestNumber + 1 : 101;
+  }
 });
 
 export default mongoose.model("Request", requestSchema);
