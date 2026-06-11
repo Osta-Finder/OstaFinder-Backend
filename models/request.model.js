@@ -42,7 +42,7 @@ const requestSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["pending", "awaiting_approval", "in_progress", "completed", "cancelled", "rejected"],
+        enum: ["pending", "accepted", "awaiting_approval", "in_progress", "completed", "cancelled", "rejected"],
         default: "pending",
     },
     timeAgo: {

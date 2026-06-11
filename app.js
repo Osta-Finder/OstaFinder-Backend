@@ -12,6 +12,7 @@ import ApiError from "./utils/ApiError.js";
 import authRoute from "./routes/auth.route.js";
 import categoryRoutes from "./routes/category.route.js";
 import workerRoutes from "./routes/worker.route.js";
+import requestRoute from "./routes/request.route.js";
 
 const app = express();
 app.use(express.json());
@@ -45,6 +46,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/auth", authRoute);
 app.use("/categories", categoryRoutes);
 app.use("/workers", workerRoutes);
+app.use("/requests", requestRoute);
 
 //invalid route
 app.use((req, res, next) => {
