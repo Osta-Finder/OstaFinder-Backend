@@ -73,6 +73,8 @@ const login = asyncHandler(async (req, res, next) => {
       email: user.email,
       role: user.role,
       phoneNumber: user.phoneNumber,
+      isOnboarded: user.isOnboarded,
+      approvalStatus: user.approvalStatus,
     },
   });
 });
@@ -134,6 +136,8 @@ const getMe = asyncHandler(async (req, res) => {
     email: req.user.email,
     role: req.user.role,
     phoneNumber: req.user.phoneNumber,
+    isOnboarded: req.user.isOnboarded,
+    approvalStatus: req.user.approvalStatus,
   });
 });
 

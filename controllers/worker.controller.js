@@ -97,10 +97,9 @@ export const getTopWorkersByCategory = asyncHandler(async (req, res, next) => {
 
 export const submitOnboarding = asyncHandler(async (req, res, next) => {
   try {
-    console.log("Request body:", req.body);
-    console.log("Request files:", req.files);
+    console.log("Onboarding submission received");
     
-    const { firstName, lastName, email, phone, city, address, specialization, yearsOfExperience, bio } = req.body;
+    const { firstName, lastName, email, phone, city, address, specialization, yearsOfExperience, bio, nationalId, certificates } = req.body;
     
     if (!firstName || !lastName || !email || !phone) {
       return res.status(400).json({
@@ -159,103 +158,34 @@ export const submitOnboarding = asyncHandler(async (req, res, next) => {
       updateData.city = city;
     }
 
-    if (req.files && (req.files.nationalId || req.files.certificates)) {
-      console.log("Processing files...", req.files);
-      const { supabase } = await import("../utils/supabaseClient.js");
-      
-      // Get files from the correct structure (upload.fields returns object with field names as keys)
-      const nationalIdFiles = req.files.nationalId || [];
-      const certificateFiles = req.files.certificates || [];
-      
-      // Only initialize certificates array if there are new certificate files
-      if (certificateFiles.length > 0) {
-        updateData.certificates = [];
-      }
-      
-      console.log(`National ID files: ${nationalIdFiles.length}, Certificate files: ${certificateFiles.length}`);
-      
-      // Upload national ID
-      for (let file of nationalIdFiles) {
-        console.log(`Processing national ID: ${file.originalname}`);
-        const timestamp = Date.now();
-        const ext = file.originalname.split(".").pop();
-        const fileName = `nationalId-${workerId}-${timestamp}.${ext}`;
-        
-        try {
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from("images")
-            .upload(fileName, file.buffer, {
-              contentType: file.mimetype,
-              upsert: false,
-            });
-
-          if (uploadError) {
-            console.error(`Upload error for national ID:`, uploadError);
-            throw new Error(`Failed to upload national ID: ${uploadError.message}`);
-          }
-
-          const { data: { publicUrl } } = supabase.storage
-            .from("images")
-            .getPublicUrl(fileName);
-          
-          updateData.nationalId = publicUrl;
-          console.log(`National ID saved: ${publicUrl}`);
-        } catch (err) {
-          console.error(`Error uploading national ID:`, err.message);
-          throw err;
-        }
-      }
-      
-      // Upload certificates (handle multiple files correctly)
-      for (let i = 0; i < certificateFiles.length; i++) {
-        const file = certificateFiles[i];
-        console.log(`Processing certificate ${i + 1}/${certificateFiles.length}: ${file.originalname}`);
-        console.log(`Certificate file size: ${file.size} bytes`);
-        const timestamp = Date.now();
-        const ext = file.originalname.split(".").pop();
-        const fileName = `certificate-${workerId}-${timestamp}-${i}.${ext}`;
-        
-        try {
-          console.log(`Uploading certificate ${i + 1} with filename: ${fileName}`);
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from("images")
-            .upload(fileName, file.buffer, {
-              contentType: file.mimetype,
-              upsert: false,
-            });
-
-          if (uploadError) {
-            console.error(`Upload error for certificate ${i + 1}:`, uploadError);
-            throw new Error(`Failed to upload certificate ${i + 1}: ${uploadError.message}`);
-          }
-
-          console.log(`Certificate ${i + 1} uploaded successfully to Supabase`);
-          const { data: { publicUrl } } = supabase.storage
-            .from("images")
-            .getPublicUrl(fileName);
-          
-          console.log(`Getting public URL for certificate ${i + 1}: ${publicUrl}`);
-          updateData.certificates.push(publicUrl);
-          console.log(`Certificate ${i + 1} added to array. Total certificates so far: ${updateData.certificates.length}`);
-        } catch (err) {
-          console.error(`Error uploading certificate ${i + 1}:`, err.message);
-          throw err;
-        }
-      }
-      
-      console.log("All files processed. Final Certificates array:", updateData.certificates, "Length:", updateData.certificates.length);
+    // Handle uploaded file URLs from frontend
+    if (nationalId) {
+      updateData.nationalId = nationalId;
+      console.log(`National ID URL saved: ${nationalId}`);
     }
 
+    if (certificates) {
+      // certificates can be a single string or an array of strings
+      if (Array.isArray(certificates)) {
+        updateData.certificates = certificates;
+      } else if (certificates) {
+        updateData.certificates = [certificates];
+      }
+      console.log(`Certificates URLs saved:`, updateData.certificates);
+    }
+
+    // Mark worker as onboarded
+    updateData.isOnboarded = true;
+    // Set approval status to pending
+    updateData.approvalStatus = 'pending';
+
     console.log("Update data:", updateData);
-    console.log("Certificates before update:", updateData.certificates);
 
     const updatedWorker = await workerModel.findByIdAndUpdate(
       workerId,
       updateData,
       { returnDocument: 'after', runValidators: false }
     ).populate('category', 'name');
-    
-    console.log("Certificates after update:", updatedWorker?.certificates);
 
     if (!updatedWorker) {
       return res.status(404).json({
@@ -306,6 +236,83 @@ export const getWorkerProfile = asyncHandler(async (req, res, next) => {
     res.status(500).json({
       success: false,
       message: error.message || "Error fetching worker profile"
+    });
+  }
+});
+
+
+// @desc    Get pending workers for admin approval
+// @route   GET /workers/pending-approval
+// @access  Admin
+export const getPendingWorkers = asyncHandler(async (req, res, next) => {
+  try {
+    const pendingWorkers = await workerModel
+      .find({ approvalStatus: 'pending' })
+      .populate('category', 'name')
+      .select('-password -refreshToken')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      results: pendingWorkers.length,
+      data: pendingWorkers
+    });
+  } catch (error) {
+    console.error("Get pending workers error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error fetching pending workers"
+    });
+  }
+});
+
+// @desc    Approve or reject worker
+// @route   PATCH /workers/:workerId/approval
+// @access  Admin
+export const updateWorkerApproval = asyncHandler(async (req, res, next) => {
+  try {
+    const { workerId } = req.params;
+    const { status } = req.body;
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status. Must be 'approved' or 'rejected'"
+      });
+    }
+
+    const updateData = {
+      approvalStatus: status
+    };
+
+    if (status === 'approved') {
+      updateData.approvedAt = new Date();
+    }
+
+    const updatedWorker = await workerModel.findByIdAndUpdate(
+      workerId,
+      updateData,
+      { returnDocument: 'after', runValidators: false }
+    ).populate('category', 'name')
+      .select('-password -refreshToken');
+
+    if (!updatedWorker) {
+      return res.status(404).json({
+        success: false,
+        message: "Worker not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Worker ${status} successfully`,
+      data: updatedWorker
+    });
+  } catch (error) {
+    console.error("Update worker approval error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error updating worker approval"
     });
   }
 });

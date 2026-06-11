@@ -52,6 +52,18 @@ const workerSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    isOnboarded: {
+        type: Boolean,
+        default: false
+    },
+    approvalStatus: {
+        type: String,
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending'
+    },
+    approvedAt: {
+        type: Date,
+    },
     address: {
         type: String,
     },
