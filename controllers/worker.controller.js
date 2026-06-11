@@ -4,6 +4,10 @@ import Service from "../models/service.model.js";
 import Portfolio from "../models/portfolio.model.js";
 import Request from "../models/request.model.js";
 import ApiError from "../utils/ApiError.js";
+import asyncHandler from "express-async-handler";
+import categoryModel from "../models/category.model.js";
+import workerModel from "../models/worker.model.js";
+import ApiFeatures from "../utils/ApiFeatures.js";
 
 // ============================================
 // STATS & DASHBOARD
@@ -18,47 +22,17 @@ export const getDashboardStats = async (req, res, next) => {
       worker: workerId,
       status: "completed",
     });
+
     const totalEarningsResult = await Portfolio.aggregate([
       {
         $match: {
           worker: new mongoose.Types.ObjectId(workerId),
           source: "platform",
-import asyncHandler from "express-async-handler";
-
-import categoryModel from "../models/category.model.js";
-import workerModel from "../models/worker.model.js";
-import ApiFeatures from "../utils/ApiFeatures.js";
-
-// @desc    Get list of workers with filtering, pagination, sorting, and search
-// @route   GET /workers
-// @access  Public
-export const getWorkers = asyncHandler(async (req, res, next) => {
-    let filter = {};
-    // Search
-    if (req.query.keyword) {
-      const matchingCategories = await categoryModel
-        .find({
-          name: { $regex: req.query.keyword, $options: "i" },
-        })
-        .select("_id");
-
-      const categoryIds = matchingCategories.map((cat) => cat._id);
-
-      filter.$or = [
-        {
-          name: {
-            $regex: req.query.keyword,
-            $options: "i",
-          },
-        },
-        {
-          category: {
-            $in: categoryIds,
-          },
         },
       },
       { $group: { _id: null, total: { $sum: "$price" } } },
     ]);
+
     const totalEarnings = totalEarningsResult[0]?.total || 0;
 
     const stats = {
@@ -84,6 +58,39 @@ export const getWorkers = asyncHandler(async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Get list of workers with filtering, pagination, sorting, and search
+// @route   GET /workers
+// @access  Public
+export const getWorkers = asyncHandler(async (req, res, next) => {
+  let filter = {};
+  // Search
+  if (req.query.keyword) {
+    const matchingCategories = await categoryModel
+      .find({
+        name: { $regex: req.query.keyword, $options: "i" },
+      })
+      .select("_id");
+
+    const categoryIds = matchingCategories.map((cat) => cat._id);
+
+    filter.$or = [
+      {
+        name: {
+          $regex: req.query.keyword,
+          $options: "i",
+        },
+      },
+      {
+        category: {
+          $in: categoryIds,
+        },
+      },
+    ];
+  }
+
+  // Implementation or feature call can continue here using filter...
+});
 
 export const getDashboardRequests = async (req, res, next) => {
   try {
@@ -253,37 +260,6 @@ export const getWorkerWorkById = async (req, res, next) => {
     const { id } = req.params;
     const workerId = req.user.id;
     const work = await Portfolio.findOne({ _id: id, worker: workerId });
-});
-
-// @desc    Get top rated worker in each category
-// @route   GET /workers/top-by-category
-// @access  Public
-export const getTopWorkersByCategory = asyncHandler(async (req, res, next) => {
-    const topWorkers = await workerModel.aggregate([
-      { $sort: { rating: -1 } },
-      {
-        $group: {
-          _id: "$category",
-          worker: { $first: "$$ROOT" },
-        },
-      },
-      {
-        $replaceRoot: { newRoot: "$worker" },
-      },
-      {
-        $lookup: {
-          from: "categories",
-          localField: "category",
-          foreignField: "_id",
-          as: "category",
-        },
-      },
-      { $unwind: "$category" },
-      {
-        $sort: { rating: -1 },
-      },
-      { $limit: 6 },
-    ]);
 
     if (!work) {
       return next(new ApiError("Work not found", 404));
@@ -295,10 +271,42 @@ export const getTopWorkersByCategory = asyncHandler(async (req, res, next) => {
   }
 };
 
+// @desc    Get top rated worker in each category
+// @route   GET /workers/top-by-category
+// @access  Public
+export const getTopWorkersByCategory = asyncHandler(async (req, res, next) => {
+  const topWorkers = await workerModel.aggregate([
+    { $sort: { rating: -1 } },
+    {
+      $group: {
+        _id: "$category",
+        worker: { $first: "$$ROOT" },
+      },
+    },
+    {
+      $replaceRoot: { newRoot: "$worker" },
+    },
+    {
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "category",
+      },
+    },
+    { $unwind: "$category" },
+    {
+      $sort: { rating: -1 },
+    },
+    { $limit: 6 },
+  ]);
+
+  res.status(200).json({ success: true, data: topWorkers });
+});
+
 export const addWorkerWork = async (req, res, next) => {
   try {
     const workerId = req.user.id;
-    // Destructure but intentionally exclude `source` — it is always forced to "outside"
     const {
       title,
       category,
@@ -309,10 +317,7 @@ export const addWorkerWork = async (req, res, next) => {
       location,
       price,
     } = req.body;
-    // Validate date is not in the future
-    // if (date && new Date(date) > new Date()) {
-    //  return next(new ApiError("لا يمكن اختيار تاريخ في المستقبل", 400));
-    //}
+
     const work = await Portfolio.create({
       worker: workerId,
       title,
@@ -320,7 +325,7 @@ export const addWorkerWork = async (req, res, next) => {
       clientName,
       description,
       date,
-      source: "outside", // Always forced for manually added works
+      source: "outside",
       status: status || "completed",
       location,
       price,
@@ -337,7 +342,6 @@ export const updateWorkerWork = async (req, res, next) => {
     const { id } = req.params;
     const workerId = req.user.id;
 
-    // First fetch to check ownership and source
     const existingWork = await Portfolio.findOne({ _id: id, worker: workerId });
 
     if (!existingWork) {
@@ -349,11 +353,7 @@ export const updateWorkerWork = async (req, res, next) => {
         new ApiError("لا يمكن تعديل الأعمال المنفذة عبر المنصة", 403),
       );
     }
-    // Validate date if it's being updated
-    //if (req.body.date && new Date(req.body.date) > new Date()) {
-    // return next(new ApiError("لا يمكن اختيار تاريخ في المستقبل", 400));
-    //}
-    // Prevent overriding source — always keep as "outside"
+
     const { source, ...updateData } = req.body;
 
     const work = await Portfolio.findOneAndUpdate(
@@ -373,7 +373,6 @@ export const deleteWorkerWork = async (req, res, next) => {
     const { id } = req.params;
     const workerId = req.user.id;
 
-    // First fetch to check ownership
     const existingWork = await Portfolio.findOne({ _id: id, worker: workerId });
 
     if (!existingWork) {
@@ -391,4 +390,3 @@ export const deleteWorkerWork = async (req, res, next) => {
     next(error);
   }
 };
-});
