@@ -74,6 +74,7 @@ const login = asyncHandler(async (req, res, next) => {
       role: user.role,
       phoneNumber: user.phoneNumber,
       isOnboarded: user.isOnboarded,
+      onboardingCompleted: user.onboardingCompleted,
       approvalStatus: user.approvalStatus,
     },
   });
@@ -137,6 +138,7 @@ const getMe = asyncHandler(async (req, res) => {
     role: req.user.role,
     phoneNumber: req.user.phoneNumber,
     isOnboarded: req.user.isOnboarded,
+    onboardingCompleted: req.user.onboardingCompleted,
     approvalStatus: req.user.approvalStatus,
   });
 });

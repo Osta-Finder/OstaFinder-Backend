@@ -158,14 +158,12 @@ export const submitOnboarding = asyncHandler(async (req, res, next) => {
       updateData.city = city;
     }
 
-    // Handle uploaded file URLs from frontend
     if (nationalId) {
       updateData.nationalId = nationalId;
       console.log(`National ID URL saved: ${nationalId}`);
     }
 
     if (certificates) {
-      // certificates can be a single string or an array of strings
       if (Array.isArray(certificates)) {
         updateData.certificates = certificates;
       } else if (certificates) {
@@ -174,9 +172,8 @@ export const submitOnboarding = asyncHandler(async (req, res, next) => {
       console.log(`Certificates URLs saved:`, updateData.certificates);
     }
 
-    // Mark worker as onboarded
     updateData.isOnboarded = true;
-    // Set approval status to pending
+    updateData.onboardingCompleted = true;
     updateData.approvalStatus = 'pending';
 
     console.log("Update data:", updateData);
@@ -241,9 +238,6 @@ export const getWorkerProfile = asyncHandler(async (req, res, next) => {
 });
 
 
-// @desc    Get pending workers for admin approval
-// @route   GET /workers/pending-approval
-// @access  Admin
 export const getPendingWorkers = asyncHandler(async (req, res, next) => {
   try {
     const pendingWorkers = await workerModel
