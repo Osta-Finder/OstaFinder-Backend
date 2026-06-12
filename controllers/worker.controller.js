@@ -392,3 +392,195 @@ export const deleteWorkerWork = async (req, res, next) => {
   }
 };
 });
+
+
+export const submitOnboarding = asyncHandler(async (req, res, next) => {
+  console.log("Onboarding submission received");
+  console.log("req.body:", req.body);
+  console.log("req.body type:", typeof req.body);
+  console.log("req.headers:", req.headers);
+  
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Request body is empty"
+    });
+  }
+
+  const { firstName, lastName, email, phone, city, address, specialization, yearsOfExperience, bio, nationalId, certificates } = req.body;
+  
+  if (!firstName || !lastName || !email || !phone) {
+    return res.status(400).json({
+      success: false,
+      message: "Missing required fields"
+    });
+  }
+
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: "Not authenticated"
+    });
+  }
+
+  const workerId = req.user._id;
+
+  const updateData = {
+    name: `${firstName} ${lastName}`,
+    email: email,
+    phoneNumber: phone,
+  };
+
+  if (specialization) {
+    let categoryId = null;
+    
+    const isValidObjectId = specialization.match(/^[0-9a-fA-F]{24}$/);
+    
+    if (isValidObjectId) {
+      categoryId = specialization;
+    } else {
+      const category = await categoryModel.findOne({ name: specialization });
+      if (category) {
+        categoryId = category._id;
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: `Category "${specialization}" not found`
+        });
+      }
+    }
+    
+    updateData.category = categoryId;
+  }
+  
+  if (yearsOfExperience) {
+    updateData.yearsOfExperience = yearsOfExperience;
+  }
+  if (bio) {
+    updateData.bio = bio;
+  }
+  if (address) {
+    updateData.address = address;
+  }
+  if (city) {
+    updateData.city = city;
+  }
+
+  if (nationalId) {
+    updateData.nationalId = nationalId;
+  }
+
+  if (certificates) {
+    // Handle both single string and array of strings from FormData
+    if (Array.isArray(certificates)) {
+      updateData.certificates = certificates;
+    } else if (typeof certificates === 'string') {
+      updateData.certificates = [certificates];
+    }
+  }
+
+  updateData.isOnboarded = true;
+  updateData.onboardingCompleted = true;
+  updateData.approvalStatus = 'pending';
+
+  const updatedWorker = await workerModel.findByIdAndUpdate(
+    workerId,
+    updateData,
+    { returnDocument: 'after', runValidators: false }
+  ).populate('category', 'name');
+
+  if (!updatedWorker) {
+    return res.status(404).json({
+      success: false,
+      message: "Worker not found"
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "Onboarding completed successfully",
+    data: updatedWorker
+  });
+});
+
+
+export const getWorkerProfile = asyncHandler(async (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: "Not authenticated"
+    });
+  }
+
+  const worker = await workerModel.findById(req.user._id).populate('category', 'name');
+
+  if (!worker) {
+    return res.status(404).json({
+      success: false,
+      message: "Worker not found"
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    data: worker
+  });
+});
+
+
+export const getPendingWorkers = asyncHandler(async (req, res, next) => {
+  const pendingWorkers = await workerModel
+    .find({ approvalStatus: 'pending' })
+    .populate('category', 'name')
+    .select('-password -refreshToken')
+    .sort({ createdAt: -1 });
+
+  res.status(200).json({
+    success: true,
+    results: pendingWorkers.length,
+    data: pendingWorkers
+  });
+});
+
+// @desc    Approve or reject worker
+// @route   PATCH /workers/:workerId/approval
+// @access  Admin
+export const updateWorkerApproval = asyncHandler(async (req, res, next) => {
+  const { workerId } = req.params;
+  const { status } = req.body;
+
+  if (!['approved', 'rejected'].includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid status. Must be 'approved' or 'rejected'"
+    });
+  }
+
+  const updateData = {
+    approvalStatus: status
+  };
+
+  if (status === 'approved') {
+    updateData.approvedAt = new Date();
+  }
+
+  const updatedWorker = await workerModel.findByIdAndUpdate(
+    workerId,
+    updateData,
+    { returnDocument: 'after', runValidators: false }
+  ).populate('category', 'name')
+    .select('-password -refreshToken');
+
+  if (!updatedWorker) {
+    return res.status(404).json({
+      success: false,
+      message: "Worker not found"
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: `Worker ${status} successfully`,
+    data: updatedWorker
+  });
+});

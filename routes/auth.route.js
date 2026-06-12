@@ -13,6 +13,7 @@ router.post("/login", validate(loginSchema) , authController.login);
 router.post("/logout", protect,authController.logout)
 router.post("/refresh",authController.refreshTokenHandler);
 router.get("/me", protect , authController.getMe);
+router.put("/me", protect , authController.updateMe);
 
 
 export default router ;
