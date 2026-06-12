@@ -1,18 +1,27 @@
-import mongoose from "mongoose";
-import Worker from "../models/worker.model.js";
+﻿import mongoose from "mongoose";
+import asyncHandler from "express-async-handler";
+
+import categoryModel from "../models/category.model.js";
+import workerModel from "../models/worker.model.js";
 import Service from "../models/service.model.js";
 import Portfolio from "../models/portfolio.model.js";
 import Request from "../models/request.model.js";
 import ApiError from "../utils/ApiError.js";
+import ApiFeatures from "../utils/ApiFeatures.js";
+
+const getWorkerId = (req) => req.user?.id || req.user?._id;
 
 // ============================================
 // STATS & DASHBOARD
 // ============================================
 export const getDashboardStats = async (req, res, next) => {
   try {
-    const workerId = req.user.id;
+    const workerId = getWorkerId(req);
 
-    // Calculate stats
+    if (!workerId) {
+      return next(new ApiError("Unauthorized", 401));
+    }
+
     const totalRequests = await Request.countDocuments({ worker: workerId });
     const completedRequests = await Request.countDocuments({
       worker: workerId,
@@ -23,38 +32,6 @@ export const getDashboardStats = async (req, res, next) => {
         $match: {
           worker: new mongoose.Types.ObjectId(workerId),
           source: "platform",
-import asyncHandler from "express-async-handler";
-
-import categoryModel from "../models/category.model.js";
-import workerModel from "../models/worker.model.js";
-import ApiFeatures from "../utils/ApiFeatures.js";
-
-// @desc    Get list of workers with filtering, pagination, sorting, and search
-// @route   GET /workers
-// @access  Public
-export const getWorkers = asyncHandler(async (req, res, next) => {
-    let filter = {};
-    // Search
-    if (req.query.keyword) {
-      const matchingCategories = await categoryModel
-        .find({
-          name: { $regex: req.query.keyword, $options: "i" },
-        })
-        .select("_id");
-
-      const categoryIds = matchingCategories.map((cat) => cat._id);
-
-      filter.$or = [
-        {
-          name: {
-            $regex: req.query.keyword,
-            $options: "i",
-          },
-        },
-        {
-          category: {
-            $in: categoryIds,
-          },
         },
       },
       { $group: { _id: null, total: { $sum: "$price" } } },
@@ -87,8 +64,12 @@ export const getWorkers = asyncHandler(async (req, res, next) => {
 
 export const getDashboardRequests = async (req, res, next) => {
   try {
-    const workerId = req.user.id;
-    // Get recent requests
+    const workerId = getWorkerId(req);
+
+    if (!workerId) {
+      return next(new ApiError("Unauthorized", 401));
+    }
+
     const requests = await Request.find({ worker: workerId })
       .sort({ createdAt: -1 })
       .limit(5);
@@ -104,7 +85,12 @@ export const getDashboardRequests = async (req, res, next) => {
 // ============================================
 export const getIncomingRequests = async (req, res, next) => {
   try {
-    const workerId = req.user.id;
+    const workerId = getWorkerId(req);
+
+    if (!workerId) {
+      return next(new ApiError("Unauthorized", 401));
+    }
+
     const requests = await Request.find({
       worker: workerId,
       status: { $in: ["pending", "awaiting_approval"] },
@@ -119,8 +105,12 @@ export const getIncomingRequests = async (req, res, next) => {
 export const updateRequestStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status } = req.body; // e.g. "in_progress", "rejected"
-    const workerId = req.user.id;
+    const { status } = req.body;
+    const workerId = getWorkerId(req);
+
+    if (!workerId) {
+      return next(new ApiError("Unauthorized", 401));
+    }
 
     const request = await Request.findOneAndUpdate(
       { _id: id, worker: workerId },
@@ -131,9 +121,6 @@ export const updateRequestStatus = async (req, res, next) => {
     if (!request) {
       return next(new ApiError("Request not found", 404));
     }
-
-    // NOTE: Portfolio auto-creation on completion is handled exclusively
-    // in request.controller.js -> updateRequestStatus to avoid duplication.
 
     res.status(200).json({ success: true, data: request });
   } catch (error) {
@@ -146,7 +133,12 @@ export const updateRequestStatus = async (req, res, next) => {
 // ============================================
 export const getWorkerServices = async (req, res, next) => {
   try {
-    const workerId = req.user.id;
+    const workerId = getWorkerId(req);
+
+    if (!workerId) {
+      return next(new ApiError("Unauthorized", 401));
+    }
+
     const services = await Service.find({ worker: workerId }).sort({
       createdAt: -1,
     });
@@ -159,7 +151,12 @@ export const getWorkerServices = async (req, res, next) => {
 export const getWorkerServiceById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const workerId = req.user.id;
+    const workerId = getWorkerId(req);
+
+    if (!workerId) {
+      return next(new ApiError("Unauthorized", 401));
+    }
+
     const service = await Service.findOne({ _id: id, worker: workerId });
 
     if (!service) {
@@ -174,7 +171,12 @@ export const getWorkerServiceById = async (req, res, next) => {
 
 export const addWorkerService = async (req, res, next) => {
   try {
-    const workerId = req.user.id;
+    const workerId = getWorkerId(req);
+
+    if (!workerId) {
+      return next(new ApiError("Unauthorized", 401));
+    }
+
     const { title, category, price, description, location } = req.body;
 
     const service = await Service.create({
@@ -195,7 +197,11 @@ export const addWorkerService = async (req, res, next) => {
 export const updateWorkerService = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const workerId = req.user.id;
+    const workerId = getWorkerId(req);
+
+    if (!workerId) {
+      return next(new ApiError("Unauthorized", 401));
+    }
 
     const service = await Service.findOneAndUpdate(
       { _id: id, worker: workerId },
@@ -216,7 +222,11 @@ export const updateWorkerService = async (req, res, next) => {
 export const deleteWorkerService = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const workerId = req.user.id;
+    const workerId = getWorkerId(req);
+
+    if (!workerId) {
+      return next(new ApiError("Unauthorized", 401));
+    }
 
     const service = await Service.findOneAndDelete({
       _id: id,
@@ -238,7 +248,12 @@ export const deleteWorkerService = async (req, res, next) => {
 // ============================================
 export const getWorkerWorks = async (req, res, next) => {
   try {
-    const workerId = req.user.id;
+    const workerId = getWorkerId(req);
+
+    if (!workerId) {
+      return next(new ApiError("Unauthorized", 401));
+    }
+
     const works = await Portfolio.find({ worker: workerId }).sort({
       createdAt: -1,
     });
@@ -251,39 +266,13 @@ export const getWorkerWorks = async (req, res, next) => {
 export const getWorkerWorkById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const workerId = req.user.id;
-    const work = await Portfolio.findOne({ _id: id, worker: workerId });
-});
+    const workerId = getWorkerId(req);
 
-// @desc    Get top rated worker in each category
-// @route   GET /workers/top-by-category
-// @access  Public
-export const getTopWorkersByCategory = asyncHandler(async (req, res, next) => {
-    const topWorkers = await workerModel.aggregate([
-      { $sort: { rating: -1 } },
-      {
-        $group: {
-          _id: "$category",
-          worker: { $first: "$$ROOT" },
-        },
-      },
-      {
-        $replaceRoot: { newRoot: "$worker" },
-      },
-      {
-        $lookup: {
-          from: "categories",
-          localField: "category",
-          foreignField: "_id",
-          as: "category",
-        },
-      },
-      { $unwind: "$category" },
-      {
-        $sort: { rating: -1 },
-      },
-      { $limit: 6 },
-    ]);
+    if (!workerId) {
+      return next(new ApiError("Unauthorized", 401));
+    }
+
+    const work = await Portfolio.findOne({ _id: id, worker: workerId });
 
     if (!work) {
       return next(new ApiError("Work not found", 404));
@@ -297,8 +286,12 @@ export const getTopWorkersByCategory = asyncHandler(async (req, res, next) => {
 
 export const addWorkerWork = async (req, res, next) => {
   try {
-    const workerId = req.user.id;
-    // Destructure but intentionally exclude `source` — it is always forced to "outside"
+    const workerId = getWorkerId(req);
+
+    if (!workerId) {
+      return next(new ApiError("Unauthorized", 401));
+    }
+
     const {
       title,
       category,
@@ -309,10 +302,7 @@ export const addWorkerWork = async (req, res, next) => {
       location,
       price,
     } = req.body;
-    // Validate date is not in the future
-    // if (date && new Date(date) > new Date()) {
-    //  return next(new ApiError("لا يمكن اختيار تاريخ في المستقبل", 400));
-    //}
+
     const work = await Portfolio.create({
       worker: workerId,
       title,
@@ -320,7 +310,7 @@ export const addWorkerWork = async (req, res, next) => {
       clientName,
       description,
       date,
-      source: "outside", // Always forced for manually added works
+      source: "outside",
       status: status || "completed",
       location,
       price,
@@ -335,9 +325,12 @@ export const addWorkerWork = async (req, res, next) => {
 export const updateWorkerWork = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const workerId = req.user.id;
+    const workerId = getWorkerId(req);
 
-    // First fetch to check ownership and source
+    if (!workerId) {
+      return next(new ApiError("Unauthorized", 401));
+    }
+
     const existingWork = await Portfolio.findOne({ _id: id, worker: workerId });
 
     if (!existingWork) {
@@ -345,15 +338,9 @@ export const updateWorkerWork = async (req, res, next) => {
     }
 
     if (existingWork.source === "platform") {
-      return next(
-        new ApiError("لا يمكن تعديل الأعمال المنفذة عبر المنصة", 403),
-      );
+      return next(new ApiError("لا يمكن تعديل الأعمال المنفذة عبر المنصة", 403));
     }
-    // Validate date if it's being updated
-    //if (req.body.date && new Date(req.body.date) > new Date()) {
-    // return next(new ApiError("لا يمكن اختيار تاريخ في المستقبل", 400));
-    //}
-    // Prevent overriding source — always keep as "outside"
+
     const { source, ...updateData } = req.body;
 
     const work = await Portfolio.findOneAndUpdate(
@@ -371,9 +358,12 @@ export const updateWorkerWork = async (req, res, next) => {
 export const deleteWorkerWork = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const workerId = req.user.id;
+    const workerId = getWorkerId(req);
 
-    // First fetch to check ownership
+    if (!workerId) {
+      return next(new ApiError("Unauthorized", 401));
+    }
+
     const existingWork = await Portfolio.findOne({ _id: id, worker: workerId });
 
     if (!existingWork) {
@@ -391,51 +381,149 @@ export const deleteWorkerWork = async (req, res, next) => {
     next(error);
   }
 };
+
+// ============================================
+// WORKER LIST & ONBOARDING
+// ============================================
+// @desc    Get list of workers with filtering, pagination, sorting, and search
+// @route   GET /workers
+// @access  Public
+export const getWorkers = asyncHandler(async (req, res, next) => {
+  let filter = {};
+
+  if (req.query.keyword) {
+    const matchingCategories = await categoryModel
+      .find({
+        name: { $regex: req.query.keyword, $options: "i" },
+      })
+      .select("_id");
+
+    const categoryIds = matchingCategories.map((cat) => cat._id);
+
+    filter.$or = [
+      {
+        name: {
+          $regex: req.query.keyword,
+          $options: "i",
+        },
+      },
+      {
+        category: {
+          $in: categoryIds,
+        },
+      },
+    ];
+  }
+
+  const apiFeatures = new ApiFeatures(workerModel.find(filter), req.query)
+    .filter()
+    .sort();
+
+  const countDocuments = await workerModel.countDocuments(
+    apiFeatures.mongooseQuery.getFilter(),
+  );
+
+  apiFeatures.paginate(countDocuments);
+
+  const workers = await apiFeatures.mongooseQuery.populate(
+    "category",
+    "name",
+  );
+
+  res.status(200).json({
+    success: true,
+    results: workers.length,
+    pagination: apiFeatures.paginationResult,
+    data: workers,
+  });
 });
 
+// @desc    Get top rated worker in each category
+// @route   GET /workers/top-by-category
+// @access  Public
+export const getTopWorkersByCategory = asyncHandler(async (req, res, next) => {
+  const topWorkers = await workerModel.aggregate([
+    { $sort: { rating: -1 } },
+    {
+      $group: {
+        _id: "$category",
+        worker: { $first: "$$ROOT" },
+      },
+    },
+    {
+      $replaceRoot: { newRoot: "$worker" },
+    },
+    {
+      $lookup: {
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "category",
+      },
+    },
+    { $unwind: "$category" },
+    {
+      $sort: { rating: -1 },
+    },
+    { $limit: 6 },
+  ]);
+
+  res.status(200).json({
+    success: true,
+    results: topWorkers.length,
+    data: topWorkers,
+  });
+});
 
 export const submitOnboarding = asyncHandler(async (req, res, next) => {
-  console.log("Onboarding submission received");
-  console.log("req.body:", req.body);
-  console.log("req.body type:", typeof req.body);
-  console.log("req.headers:", req.headers);
-  
   if (!req.body || Object.keys(req.body).length === 0) {
     return res.status(400).json({
       success: false,
-      message: "Request body is empty"
+      message: "Request body is empty",
     });
   }
 
-  const { firstName, lastName, email, phone, city, address, specialization, yearsOfExperience, bio, nationalId, certificates } = req.body;
-  
+  const {
+    firstName,
+    lastName,
+    email,
+    phone,
+    city,
+    address,
+    specialization,
+    yearsOfExperience,
+    bio,
+    nationalId,
+    certificates,
+  } = req.body;
+
   if (!firstName || !lastName || !email || !phone) {
     return res.status(400).json({
       success: false,
-      message: "Missing required fields"
+      message: "Missing required fields",
     });
   }
 
   if (!req.user) {
     return res.status(401).json({
       success: false,
-      message: "Not authenticated"
+      message: "Not authenticated",
     });
   }
 
-  const workerId = req.user._id;
+  const workerId = getWorkerId(req);
 
   const updateData = {
     name: `${firstName} ${lastName}`,
-    email: email,
+    email,
     phoneNumber: phone,
   };
 
   if (specialization) {
     let categoryId = null;
-    
-    const isValidObjectId = specialization.match(/^[0-9a-fA-F]{24}$/);
-    
+
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(specialization);
+
     if (isValidObjectId) {
       categoryId = specialization;
     } else {
@@ -445,14 +533,14 @@ export const submitOnboarding = asyncHandler(async (req, res, next) => {
       } else {
         return res.status(400).json({
           success: false,
-          message: `Category "${specialization}" not found`
+          message: `Category "${specialization}" not found`,
         });
       }
     }
-    
+
     updateData.category = categoryId;
   }
-  
+
   if (yearsOfExperience) {
     updateData.yearsOfExperience = yearsOfExperience;
   }
@@ -465,80 +553,77 @@ export const submitOnboarding = asyncHandler(async (req, res, next) => {
   if (city) {
     updateData.city = city;
   }
-
   if (nationalId) {
     updateData.nationalId = nationalId;
   }
-
   if (certificates) {
-    // Handle both single string and array of strings from FormData
     if (Array.isArray(certificates)) {
       updateData.certificates = certificates;
-    } else if (typeof certificates === 'string') {
+    } else if (typeof certificates === "string") {
       updateData.certificates = [certificates];
     }
   }
 
   updateData.isOnboarded = true;
   updateData.onboardingCompleted = true;
-  updateData.approvalStatus = 'pending';
+  updateData.approvalStatus = "pending";
 
-  const updatedWorker = await workerModel.findByIdAndUpdate(
-    workerId,
-    updateData,
-    { returnDocument: 'after', runValidators: false }
-  ).populate('category', 'name');
+  const updatedWorker = await workerModel
+    .findByIdAndUpdate(workerId, updateData, {
+      returnDocument: "after",
+      runValidators: false,
+    })
+    .populate("category", "name");
 
   if (!updatedWorker) {
     return res.status(404).json({
       success: false,
-      message: "Worker not found"
+      message: "Worker not found",
     });
   }
 
   res.status(200).json({
     success: true,
     message: "Onboarding completed successfully",
-    data: updatedWorker
+    data: updatedWorker,
   });
 });
-
 
 export const getWorkerProfile = asyncHandler(async (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({
       success: false,
-      message: "Not authenticated"
+      message: "Not authenticated",
     });
   }
 
-  const worker = await workerModel.findById(req.user._id).populate('category', 'name');
+  const workerId = getWorkerId(req);
+  const worker = await workerModel.findById(workerId).populate("category", "name");
 
   if (!worker) {
     return res.status(404).json({
       success: false,
-      message: "Worker not found"
+      message: "Worker not found",
     });
   }
 
   res.status(200).json({
     success: true,
-    data: worker
+    data: worker,
   });
 });
 
-
 export const getPendingWorkers = asyncHandler(async (req, res, next) => {
   const pendingWorkers = await workerModel
-    .find({ approvalStatus: 'pending' })
-    .populate('category', 'name')
-    .select('-password -refreshToken')
+    .find({ approvalStatus: "pending" })
+    .populate("category", "name")
+    .select("-password -refreshToken")
     .sort({ createdAt: -1 });
 
   res.status(200).json({
     success: true,
     results: pendingWorkers.length,
-    data: pendingWorkers
+    data: pendingWorkers,
   });
 });
 
@@ -549,38 +634,39 @@ export const updateWorkerApproval = asyncHandler(async (req, res, next) => {
   const { workerId } = req.params;
   const { status } = req.body;
 
-  if (!['approved', 'rejected'].includes(status)) {
+  if (!["approved", "rejected"].includes(status)) {
     return res.status(400).json({
       success: false,
-      message: "Invalid status. Must be 'approved' or 'rejected'"
+      message: "Invalid status. Must be 'approved' or 'rejected'",
     });
   }
 
   const updateData = {
-    approvalStatus: status
+    approvalStatus: status,
   };
 
-  if (status === 'approved') {
+  if (status === "approved") {
     updateData.approvedAt = new Date();
   }
 
-  const updatedWorker = await workerModel.findByIdAndUpdate(
-    workerId,
-    updateData,
-    { returnDocument: 'after', runValidators: false }
-  ).populate('category', 'name')
-    .select('-password -refreshToken');
+  const updatedWorker = await workerModel
+    .findByIdAndUpdate(workerId, updateData, {
+      returnDocument: "after",
+      runValidators: false,
+    })
+    .populate("category", "name")
+    .select("-password -refreshToken");
 
   if (!updatedWorker) {
     return res.status(404).json({
       success: false,
-      message: "Worker not found"
+      message: "Worker not found",
     });
   }
 
   res.status(200).json({
     success: true,
     message: `Worker ${status} successfully`,
-    data: updatedWorker
+    data: updatedWorker,
   });
 });
