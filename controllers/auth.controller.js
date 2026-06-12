@@ -117,7 +117,7 @@ const refreshTokenHandler = asyncHandler(async (req, res, next) => {
   res.json({ message: "Token refreshed" });
 });
 
-const logout =asyncHandler(async (req, res) => {
+const logout = asyncHandler(async (req, res) => {
   res.clearCookie("accessToken", {
     httpOnly: true,
     secure: false,
@@ -130,7 +130,7 @@ const logout =asyncHandler(async (req, res) => {
     sameSite: "lax",
   });
   req.user.refreshToken = null;
-    await req.user.save();
+  await req.user.save();
   res.json({ message: "Logged out" });
 });
 
@@ -146,5 +146,25 @@ const getMe = asyncHandler(async (req, res) => {
   });
 });
 
+const updateMe = asyncHandler(async (req, res) => {
+  const { name, email, phoneNumber } = req.body;
 
-export default { register, login, logout, getMe, refreshTokenHandler};
+  if (name !== undefined) req.user.name = name;
+  if (email !== undefined) req.user.email = email;
+  if (phoneNumber !== undefined) req.user.phoneNumber = phoneNumber;
+
+  await req.user.save();
+
+  res.json({
+    message: "User updated successfully",
+    user: {
+      _id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
+      role: req.user.role,
+      phoneNumber: req.user.phoneNumber,
+    },
+  });
+});
+
+export default { register, login, logout, getMe, updateMe, refreshTokenHandler };
