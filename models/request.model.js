@@ -1,39 +1,44 @@
 import mongoose from "mongoose";
 
-const requestSchema = new mongoose.Schema(
-  {
-    requestNumber: {
-      type: Number,
-      unique: true,
+const requestSchema = new mongoose.Schema({
+    client: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User", // Assuming User model is the client
+        required: false, // Make false for now to allow mocked data insertion if needed
     },
-    service: {
-      type: String,
-      required: [true, "الخدمة مطلوبة"],
-      trim: true,
+    clientName: {
+        type: String,
+        required: true,
     },
     worker: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Worker",
-      required: [true, "الصنايعي مطلوب"],
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Worker",
+        required: true,
     },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: [true, "المستخدم مطلوب"],
+    serviceTitle: {
+        type: String,
+        required: true,
     },
-    date: {
-      type: Date,
-      required: [true, "التاريخ مطلوب"],
+    location: {
+        type: String,
+        required: true,
     },
-    address: {
-      type: String,
-      required: [true, "العنوان مطلوب"],
-      trim: true,
+    distance: {
+        type: String,
+        default: "Unknown",
     },
-    amount: {
-      type: Number,
-      required: [true, "المبلغ مطلوب"],
-      min: [0, "المبلغ يجب أن يكون أكبر من صفر"],
+    urgency: {
+        type: String,
+        enum: ["normal", "urgent"],
+        default: "normal",
+    },
+    price: {
+        type: Number,
+        default: null,
+    },
+    category: {
+        type: String,
+        required: true,
     },
     status: {
       type: String,
