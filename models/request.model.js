@@ -1,5 +1,26 @@
 import mongoose from "mongoose";
 
+export const statusMap = {
+  pending: "معلقة",
+  accepted: "مقبولة",
+  on_the_way: "في الطريق",
+  in_progress: "قيد التنفيذ",
+  completed: "مكتملة",
+  rejected: "مرفوضة",
+  cancelled: "ملغية",
+};
+
+export const reverseStatusMap = {
+  الكل: null,
+  معلقة: "pending",
+  مقبولة: "accepted",
+  "في الطريق": "on_the_way",
+  "قيد التنفيذ": "in_progress",
+  مكتملة: "completed",
+  مرفوضة: "rejected",
+  ملغية: "cancelled",
+};
+
 const requestSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,

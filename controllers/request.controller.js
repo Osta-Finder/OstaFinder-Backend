@@ -1,30 +1,9 @@
 import asyncHandler from "express-async-handler";
-import Request from "../models/request.model.js";
+import Request, { statusMap, reverseStatusMap } from "../models/request.model.js";
 import Rating from "../models/rating.model.js";
 import Worker from "../models/worker.model.js";
 import Portfolio from "../models/portfolio.model.js";
 import ApiError from "../utils/ApiError.js";
-
-const statusMap = {
-  pending: "معلقة",
-  accepted: "مقبولة",
-  on_the_way: "في الطريق",
-  in_progress: "قيد التنفيذ",
-  completed: "مكتملة",
-  rejected: "مرفوضة",
-  cancelled: "ملغية",
-};
-
-const reverseStatusMap = {
-  الكل: null,
-  معلقة: "pending",
-  مقبولة: "accepted",
-  "في الطريق": "on_the_way",
-  "قيد التنفيذ": "in_progress",
-  مكتملة: "completed",
-  مرفوضة: "rejected",
-  ملغية: "cancelled",
-};
 
 const getRatingMap = async (requests) => {
   const ids = requests.map((r) => r._id);
