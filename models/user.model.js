@@ -2,6 +2,50 @@ import mongoose from "mongoose";
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt'
 
+const addressSchema = new mongoose.Schema(
+    {
+        title: {
+            type: String,
+            trim: true,
+            default: "Home",
+        },
+        address: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        street: {
+            type: String,
+            trim: true,
+        },
+        city: {
+            type: String,
+            trim: true,
+        },
+        area: {
+            type: String,
+            trim: true,
+        },
+        buildingNumber: {
+            type: String,
+            trim: true,
+        },
+        floor: {
+            type: String,
+            trim: true,
+        },
+        apartment: {
+            type: String,
+            trim: true,
+        },
+        isDefault: {
+            type: Boolean,
+            default: false,
+        },
+    },
+    { _id: true }
+);
+
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -28,6 +72,10 @@ const userSchema = new mongoose.Schema({
     } ,
     refreshToken: {
         type: String,
+    },
+    addresses: {
+        type: [addressSchema],
+        default: [],
     },
 }, {
     timestamps: true

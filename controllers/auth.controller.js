@@ -9,6 +9,14 @@ import {
   generateRefreshToken,
 } from "../utils/authToken.js";
 
+const buildAuthUser = (user) => ({
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  phoneNumber: user.phoneNumber,
+  addresses: user.addresses || [],
+});
 
 const register = asyncHandler(async (req, res, next) => {
   let user;
@@ -25,13 +33,7 @@ const register = asyncHandler(async (req, res, next) => {
   //   await user.save();
   res.status(201).json({
     message: "user created sucessfully",
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phoneNumber: user.phoneNumber,
-    },
+    user: buildAuthUser(user),
   });
 });
 
@@ -74,13 +76,7 @@ const login = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     message: "Logged in successfully",
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phoneNumber: user.phoneNumber,
-    },
+    user: buildAuthUser(user),
   });
 });
 
@@ -137,14 +133,29 @@ const logout =asyncHandler(async (req, res) => {
 const getMe = asyncHandler(async (req, res) => {
   //   const user = await User.findById(req.user.id);
   //   console.log(req.user);
+  res.json(buildAuthUser(req.user));
+});
+
+const updateMe = asyncHandler(async (req, res) => {
+  const allowedFields = [
+    "name",
+    "email",
+    "phoneNumber",
+    "addresses",
+  ];
+
+  allowedFields.forEach((field) => {
+    if (req.body[field] !== undefined) {
+      req.user[field] = req.body[field];
+    }
+  });
+
+  await req.user.save();
+
   res.json({
-    _id: req.user._id,
-    name: req.user.name,
-    email: req.user.email,
-    role: req.user.role,
-    phoneNumber: req.user.phoneNumber,
+    message: "User updated successfully",
+    user: buildAuthUser(req.user),
   });
 });
 
-
-export default { register, login, logout, getMe, refreshTokenHandler};
+export default { register, login, logout, getMe, updateMe, refreshTokenHandler};
