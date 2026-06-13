@@ -16,7 +16,7 @@ const imageSchema = new mongoose.Schema({
   bucket: {
     type: String,
     required: true,
-    enum: ["profile-pics", "problem-images", "official-docs", "images"],
+    enum: ["profile-pics", "problem-images", "official-docs", "images", "services"],
   },
 
 }, {
