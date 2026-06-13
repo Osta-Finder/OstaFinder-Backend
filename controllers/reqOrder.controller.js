@@ -14,8 +14,16 @@ export const createOrder = async (req, res, next) => {
     if(!worker){
       return next(new ApiError("عذراً، لم يتم العثور على هذا الفني في النظام", 404));
     }
-    if(worker.category.toString() !== category.toString()){
-      return next(new ApiError("خطأ! : التخصص المختار لا يطابق التخصص الفعلي لهذا الفني", 400))
+    if (!category) {
+      return next(new ApiError("يرجى تحديد فئة الخدمة", 400));
+    }
+    if (!worker.category) {
+      return next(new ApiError("هذا الفني لم يقم بتحديد تخصصه بعد", 400));
+    }
+    const workerCatStr = worker.category ? worker.category.toString() : "";
+    const reqCatStr = category ? category.toString() : "";
+    if (workerCatStr !== reqCatStr) {
+      return next(new ApiError("خطأ! : التخصص المختار لا يطابق التخصص الفعلي لهذا الفني", 400));
     }
 
 

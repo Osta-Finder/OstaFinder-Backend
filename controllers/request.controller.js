@@ -4,6 +4,7 @@ import Request from "../models/request.model.js";
 import Rating from "../models/rating.model.js";
 import User from "../models/user.model.js";
 import Worker from "../models/worker.model.js";
+import Portfolio from "../models/portfolio.model.js";
 import ApiError from "../utils/ApiError.js";
 
 const statusMap = {
@@ -50,7 +51,10 @@ export const getRequests = asyncHandler(async (req, res, next) => {
     const ratings = await Rating.find({ request: { $in: requestIds } }).select("stars comment createdAt request");
     const ratingMap = {};
     ratings.forEach((rt) => {
-      ratingMap[rt.request.toString()] = { _id: rt._id, stars: rt.stars, comment: rt.comment, createdAt: rt.createdAt };
+       ratingMap[rt.request.toString()] = { _id: rt._id, stars: rt.stars, comment: rt.comment, createdAt: rt.createdAt };
+      // if (rt.request) {
+      //   ratingMap[rt.request.toString()] = { _id: rt._id, stars: rt.stars, comment: rt.comment, createdAt: rt.createdAt };
+      // }
     });
 
     const result = requests.map((r) => ({
@@ -82,7 +86,11 @@ export const getMyWorkerRequests = asyncHandler(async (req, res, next) => {
     const ratings = await Rating.find({ request: { $in: requestIds } }).select("stars comment createdAt request");
     const ratingMap = {};
     ratings.forEach((rt) => {
+
       ratingMap[rt.request.toString()] = { _id: rt._id, stars: rt.stars, comment: rt.comment, createdAt: rt.createdAt };
+      // if (rt.request) {
+      //   ratingMap[rt.request.toString()] = { _id: rt._id, stars: rt.stars, comment: rt.comment, createdAt: rt.createdAt };
+      // }
     });
 
     const result = requests.map((r) => ({
@@ -128,7 +136,7 @@ export const getRequestStats = asyncHandler(async (req, res, next) => {
     const all = await Request.countDocuments(filter);
     const pending = await Request.countDocuments({ ...filter, status: "pending" });
     const accepted = await Request.countDocuments({ ...filter, status: "accepted" });
-    const inProgress = await Request.countDocuments({ ...filter, status: "inProgress" });
+    const inProgress = await Request.countDocuments({ ...filter, status: "in_progress" });
     const completed = await Request.countDocuments({ ...filter, status: "completed" });
     const rejected = await Request.countDocuments({ ...filter, status: "rejected" });
     const cancelled = await Request.countDocuments({ ...filter, status: "cancelled" });
@@ -229,6 +237,32 @@ export const updateRequestStatus = asyncHandler(async (req, res, next) => {
 
     if (!request) {
       return next(new ApiError("الطلب غير موجود", 404));
+    }
+
+    // Auto-create portfolio item when a request is completed.
+    // This is the SINGLE canonical place where this logic lives.
+    if (req.body.status === "completed") {
+      const existingPortfolio = await Portfolio.findOne({
+        worker: request.worker,
+        title: request.serviceTitle,
+        clientName: request.clientName,
+        source: "platform",
+      });
+      if (!existingPortfolio) {
+        await Portfolio.create({
+          worker: request.worker,
+          title: request.serviceTitle,
+          category: request.category,
+          clientName: request.clientName,
+          description: `تم إنجاز هذا العمل بنجاح عبر منصة أوسطى فايندر.`,
+          date: new Date(),
+          source: "platform",
+          status: "completed",
+          location: request.location,
+          price: request.price || 0,
+          images: [],
+        });
+      }
     }
 
     res.status(200).json({
