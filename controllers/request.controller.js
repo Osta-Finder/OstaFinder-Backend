@@ -65,6 +65,9 @@ const getRequestFilter = async (req, next) => {
   return next(new ApiError("غير مصرح لك", 403));
 };
 
+// @desc    Get all requests (own for client/worker, all for admin)
+// @route   GET /requests?status=pending
+// @access  Private
 export const getRequests = asyncHandler(async (req, res, next) => {
   const filter = {};
   if (req.user.role !== "admin") filter.user = req.user.id;
@@ -84,6 +87,9 @@ export const getRequests = asyncHandler(async (req, res, next) => {
   res.status(200).json({ success: true, count: data.length, data });
 });
 
+// @desc    Get requests assigned to the logged-in worker
+// @route   GET /requests/my-worker
+// @access  Private (worker only)
 export const getMyWorkerRequests = asyncHandler(async (req, res, next) => {
   const requests = await Request.find({ worker: req.user.id })
     .populate("worker", "name phoneNumber")
@@ -96,6 +102,9 @@ export const getMyWorkerRequests = asyncHandler(async (req, res, next) => {
   res.status(200).json({ success: true, count: data.length, data });
 });
 
+// @desc    Get request stats (count by status)
+// @route   GET /requests/stats
+// @access  Private
 export const getRequestStats = asyncHandler(async (req, res, next) => {
   const filter = await getRequestFilter(req, next);
   if (!filter) return;
@@ -126,6 +135,9 @@ export const getRequestStats = asyncHandler(async (req, res, next) => {
   });
 });
 
+// @desc    Get single request by ID
+// @route   GET /requests/:id
+// @access  Private (owner, assigned worker, or admin)
 export const getRequestById = asyncHandler(async (req, res, next) => {
   const request = await Request.findById(req.params.id)
     .populate("worker", "name phoneNumber")
@@ -146,6 +158,9 @@ export const getRequestById = asyncHandler(async (req, res, next) => {
   res.status(200).json({ success: true, data: formatRequest(request, rating) });
 });
 
+// @desc    Create a new request
+// @route   POST /requests
+// @access  Private (client only)
 export const createRequest = asyncHandler(async (req, res, next) => {
   const { service, worker, date, address, amount, image } = req.body;
 
@@ -181,6 +196,9 @@ export const createRequest = asyncHandler(async (req, res, next) => {
   });
 });
 
+// @desc    Update request status (accept, reject, complete, etc.)
+// @route   PATCH /requests/:id/status
+// @access  Private (assigned worker or admin)
 export const updateRequestStatus = asyncHandler(async (req, res, next) => {
   const existingRequest = await Request.findById(req.params.id);
   if (!existingRequest) return next(new ApiError("الطلب غير موجود", 404));
@@ -236,6 +254,9 @@ export const updateRequestStatus = asyncHandler(async (req, res, next) => {
   });
 });
 
+// @desc    Cancel a request (only if pending)
+// @route   PATCH /requests/:id/cancel
+// @access  Private (owner client or admin)
 export const cancelRequest = asyncHandler(async (req, res, next) => {
   const request = await Request.findById(req.params.id);
   if (!request) return next(new ApiError("الطلب غير موجود", 404));
