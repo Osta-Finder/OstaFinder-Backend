@@ -14,6 +14,7 @@ import categoryRoute from "./routes/category.route.js";
 import workerRoute from "./routes/worker.route.js"
 import reqOrderRoute from "./routes/reqOrder.route.js"
 import uploadRoute from "./routes/upload.route.js"
+import userRoute from "./routes/user.route.js"
 import Category from "./models/category.model.js"
 
 const app = express();
@@ -22,12 +23,14 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
-
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://ostafinderuserfront.vercel.app/",
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:3002",
+      "https://ostafinderuserfront.vercel.app",
     ],
     credentials: true,
   }),
@@ -82,8 +85,9 @@ app.use("/auth", authRoute);
 app.use("/requests", requestRoutes);
 app.use("/categories", categoryRoute);
 app.use("/workers", workerRoute);
-app.use("/orders", reqOrderRoute)
-app.use("/upload", uploadRoute)
+app.use("/orders", reqOrderRoute);
+app.use("/upload", uploadRoute);
+app.use("/users", userRoute);
 
 //invalid route
 app.use((req, res, next) => {

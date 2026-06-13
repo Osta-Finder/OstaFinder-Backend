@@ -132,7 +132,7 @@ const options = {
             prev: { type: "number", example: null, nullable: true },
           },
         },
-        // ==================== Upload ====================
+      // ==================== Upload ====================
         UploadResponse: {
           type: "object",
           properties: {
@@ -154,6 +154,130 @@ const options = {
           properties: {
             path: { type: "string", example: "1715000000000-abc123.png" },
             bucket: { type: "string", example: "images" },
+          },
+        },
+        // ==================== Worker Service ====================
+        WorkerService: {
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "6a1d0d12a0e18535a1179a0c" },
+            worker: { type: "string", example: "6a1d1a1cec88395a3e2dadae" },
+            title: { type: "string", example: "تصليح حنفية" },
+            category: { type: "string", example: "سباكة" },
+            price: { type: "number", example: 385 },
+            description: { type: "string", example: "تصليح جميع أنواع الحنفيات" },
+            location: { type: "string", example: "المهندسين" },
+            image: { type: "string", nullable: true },
+            status: { type: "string", enum: ["active", "paused", "draft"] },
+          },
+        },
+        CreateServiceInput: {
+          type: "object",
+          required: ["title", "category", "price", "description", "location"],
+          properties: {
+            title: { type: "string", example: "تصليح حنفية" },
+            category: { type: "string", example: "سباكة" },
+            price: { type: "number", example: 385 },
+            description: { type: "string", example: "تصليح جميع أنواع الحنفيات" },
+            location: { type: "string", example: "المهندسين" },
+          },
+        },
+        // ==================== Worker Work (Portfolio) ====================
+        WorkerWork: {
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "6a1d0d12a0e18535a1179a0e" },
+            worker: { type: "string", example: "6a1d1a1cec88395a3e2dadae" },
+            title: { type: "string", example: "تركيب مطبخ كامل" },
+            category: { type: "string", example: "نجارة" },
+            clientName: { type: "string", example: "محمد عبد الله" },
+            description: { type: "string" },
+            date: { type: "string", format: "date" },
+            source: { type: "string", enum: ["platform", "outside"] },
+            status: { type: "string", enum: ["completed", "in_progress"] },
+            location: { type: "string" },
+            price: { type: "number", example: 1500 },
+            images: { type: "array", items: { type: "string" } },
+          },
+        },
+        CreateWorkInput: {
+          type: "object",
+          required: ["title", "category", "clientName", "description", "date", "location", "price"],
+          properties: {
+            title: { type: "string", example: "تركيب مطبخ كامل" },
+            category: { type: "string", example: "نجارة" },
+            clientName: { type: "string", example: "محمد عبد الله" },
+            description: { type: "string", example: "تم تركيب المطبخ بالكامل" },
+            date: { type: "string", format: "date" },
+            location: { type: "string", example: "6 أكتوبر" },
+            price: { type: "number", example: 1500 },
+          },
+        },
+        // ==================== Worker Dashboard ====================
+        WorkerStats: {
+          type: "object",
+          properties: {
+            totalOrders: {
+              type: "object",
+              properties: {
+                value: { type: "number", example: 15 },
+                change: { type: "string", example: "+0%" },
+                period: { type: "string", example: "هذا الشهر" },
+              },
+            },
+            employmentRate: {
+              type: "object",
+              properties: {
+                value: { type: "string", example: "73%" },
+                change: { type: "string", example: "+0%" },
+                period: { type: "string", example: "هذا الشهر" },
+              },
+            },
+            totalEarnings: {
+              type: "object",
+              properties: {
+                value: { type: "number", example: 12500 },
+                currency: { type: "string", example: "ج.م" },
+                change: { type: "string", example: "+0%" },
+                period: { type: "string", example: "هذا الشهر" },
+              },
+            },
+          },
+        },
+        // ==================== Order ====================
+        CreateOrderInput: {
+          type: "object",
+          required: ["category", "description", "phone", "preferredTime", "location"],
+          properties: {
+            category: { type: "string", example: "6a1d0d12a0e18535a1179a0b" },
+            description: { type: "string", example: "عاوز سباك يصلح حنفية المطبخ" },
+            phone: { type: "string", example: "01001234567" },
+            preferredTime: { type: "string", example: "2026-05-25T14:00:00Z" },
+            location: { type: "string", example: "12 شارع النيل، المهندسين" },
+          },
+        },
+        // ==================== Worker Onboarding ====================
+        WorkerOnboardingInput: {
+          type: "object",
+          required: ["firstName", "lastName", "email", "phone"],
+          properties: {
+            firstName: { type: "string", example: "أحمد" },
+            lastName: { type: "string", example: "السيد" },
+            email: { type: "string", example: "worker@example.com" },
+            phone: { type: "string", example: "01001234567" },
+            city: { type: "string", example: "القاهرة" },
+            address: { type: "string", example: "المهندسين" },
+            specialization: { type: "string", example: "6a1d0d12a0e18535a1179a0b" },
+            yearsOfExperience: { type: "number", example: 5 },
+            bio: { type: "string", example: "صنايعي خبرة 5 سنين" },
+            nationalId: { type: "string", example: "28401011234567" },
+          },
+        },
+        WorkerApprovalInput: {
+          type: "object",
+          required: ["status"],
+          properties: {
+            status: { type: "string", enum: ["approved", "rejected"], example: "approved" },
           },
         },
         // ==================== Request (existing) ====================
@@ -182,7 +306,9 @@ const options = {
             date: { type: "string", format: "date", example: "2026-05-20" },
             address: { type: "string", example: "12 شارع النيل، المهندسين" },
             amount: { type: "number", example: 385 },
+            image: { type: "string", nullable: true, example: "https://supabase.co/storage/.../image.png" },
             status: { type: "string", example: "مكتملة" },
+            eta: { type: "string", example: "" },
             rating: {
               type: "object",
               nullable: true,
@@ -216,6 +342,7 @@ const options = {
             date: { type: "string", format: "date", example: "2026-05-25" },
             address: { type: "string", example: "12 شارع النيل، المهندسين" },
             amount: { type: "number", example: 385 },
+            image: { type: "string", nullable: true, example: "https://supabase.co/storage/.../image.png", description: "رابط الصورة بعد رفعها عبر /upload" },
           },
         },
         UpdateStatusInput: {
@@ -398,6 +525,43 @@ const options = {
               content: {
                 "application/json": {
                   schema: { $ref: "#/components/schemas/AuthUserResponse" },
+                },
+              },
+            },
+             401: { description: "غير مصرح به" },
+          },
+        },
+        put: {
+          tags: ["Auth"],
+          summary: "تحديث بيانات المستخدم",
+          description: "يحدث اسم المستخدم ورقم الهاتف",
+          security: [{ cookieAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string", example: "أحمد السيد" },
+                    phoneNumber: { type: "string", example: "01009876543" },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: "تم التحديث",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: { $ref: "#/components/schemas/AuthUserResponse" },
+                    },
+                  },
                 },
               },
             },
@@ -696,6 +860,635 @@ const options = {
           },
         },
       },
+      // ==================== Workers Profile & Onboarding ====================
+      "/workers/profile": {
+        get: {
+          tags: ["Workers"],
+          summary: "الملف الشخصي للصنايعي",
+          description: "يعيد بيانات الصنايعي المسجل دخوله",
+          security: [{ cookieAuth: [] }],
+          responses: {
+            200: {
+              description: "بيانات الصنايعي",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: { $ref: "#/components/schemas/Worker" },
+                    },
+                  },
+                },
+              },
+            },
+            401: { description: "غير مصرح به" },
+            404: { description: "الصنايعي غير موجود" },
+          },
+        },
+      },
+      "/workers/onboarding": {
+        post: {
+          tags: ["Workers"],
+          summary: "تكملة بيانات الصنايعي",
+          description: "يكمل الصنايعي بياناته (specialization, address, bio, ...)",
+          security: [{ cookieAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "multipart/form-data": {
+                schema: { $ref: "#/components/schemas/WorkerOnboardingInput" },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: "تم تكملة البيانات بنجاح",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      message: { type: "string" },
+                      data: { $ref: "#/components/schemas/Worker" },
+                    },
+                  },
+                },
+              },
+            },
+            400: { description: "بيانات ناقصة" },
+            401: { description: "غير مصرح به" },
+          },
+        },
+      },
+      "/workers/pending-approval": {
+        get: {
+          tags: ["Workers"],
+          summary: "الصنايعية في انتظار الموافقة",
+          description: "يعيد قائمة الصنايعية اللي في انتظار الموافقة (لـ admin)",
+          responses: {
+            200: {
+              description: "قائمة الصنايعية",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      results: { type: "number" },
+                      data: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/Worker" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      "/workers/{workerId}/approval": {
+        patch: {
+          tags: ["Workers"],
+          summary: "الموافقة على صنايعي",
+          description: "يوافق أو يرفض صنايعي (لـ admin فقط)",
+          parameters: [
+            {
+              name: "workerId",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+              description: "معرف الصنايعي",
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/WorkerApprovalInput" },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: "تم التحديث",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      message: { type: "string" },
+                      data: { $ref: "#/components/schemas/Worker" },
+                    },
+                  },
+                },
+              },
+            },
+            400: { description: "حالة غير صالحة" },
+            404: { description: "الصنايعي غير موجود" },
+          },
+        },
+      },
+      // ==================== Worker Dashboard ====================
+      "/workers/stats": {
+        get: {
+          tags: ["Workers Dashboard"],
+          summary: "إحصائيات لوحة التحكم للصنايعي",
+          description: "يعيد إحصائيات الصنايعي (عدد الطلبات، الإيرادات، ...)",
+          security: [{ cookieAuth: [] }],
+          responses: {
+            200: {
+              description: "الإحصائيات",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: { $ref: "#/components/schemas/WorkerStats" },
+                    },
+                  },
+                },
+              },
+            },
+            401: { description: "غير مصرح به" },
+          },
+        },
+      },
+      "/workers/dashboard-requests": {
+        get: {
+          tags: ["Workers Dashboard"],
+          summary: "آخر طلبات الصنايعي (للوحة التحكم)",
+          description: "يعيد آخر 5 طلبات للصنايعي",
+          security: [{ cookieAuth: [] }],
+          responses: {
+            200: {
+              description: "قائمة الطلبات",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/Request" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      "/workers/requests": {
+        get: {
+          tags: ["Workers Dashboard"],
+          summary: "الطلبات الواردة للصنايعي",
+          description: "يعيد الطلبات pending للصنايعي",
+          security: [{ cookieAuth: [] }],
+          responses: {
+            200: {
+              description: "الطلبات الواردة",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/Request" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      "/workers/requests/{id}/status": {
+        put: {
+          tags: ["Workers Dashboard"],
+          summary: "تحديث حالة طلب (من الصنايعي)",
+          description: "يقوم الصنايعي بتحديث حالة طلب معين",
+          security: [{ cookieAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+              description: "معرف الطلب",
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/UpdateStatusInput" },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: "تم التحديث",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: { $ref: "#/components/schemas/Request" },
+                    },
+                  },
+                },
+              },
+            },
+            401: { description: "غير مصرح به" },
+            404: { description: "الطلب غير موجود" },
+          },
+        },
+      },
+      // ==================== Worker Services ====================
+      "/workers/services": {
+        get: {
+          tags: ["Workers Services"],
+          summary: "خدمات الصنايعي",
+          description: "يعيد قائمة خدمات الصنايعي المسجل",
+          security: [{ cookieAuth: [] }],
+          responses: {
+            200: {
+              description: "قائمة الخدمات",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/WorkerService" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        post: {
+          tags: ["Workers Services"],
+          summary: "إضافة خدمة جديدة",
+          description: "يضيف الصنايعي خدمة جديدة",
+          security: [{ cookieAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CreateServiceInput" },
+              },
+            },
+          },
+          responses: {
+            201: {
+              description: "تمت الإضافة",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: { $ref: "#/components/schemas/WorkerService" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      "/workers/services/{id}": {
+        get: {
+          tags: ["Workers Services"],
+          summary: "خدمة معينة",
+          description: "يعيد خدمة محددة",
+          security: [{ cookieAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+              description: "معرف الخدمة",
+            },
+          ],
+          responses: {
+            200: {
+              description: "بيانات الخدمة",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: { $ref: "#/components/schemas/WorkerService" },
+                    },
+                  },
+                },
+              },
+            },
+            404: { description: "الخدمة غير موجودة" },
+          },
+        },
+        put: {
+          tags: ["Workers Services"],
+          summary: "تحديث خدمة",
+          description: "يحدث بيانات خدمة محددة",
+          security: [{ cookieAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+              description: "معرف الخدمة",
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CreateServiceInput" },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: "تم التحديث",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: { $ref: "#/components/schemas/WorkerService" },
+                    },
+                  },
+                },
+              },
+            },
+            404: { description: "الخدمة غير موجودة" },
+          },
+        },
+        delete: {
+          tags: ["Workers Services"],
+          summary: "حذف خدمة",
+          description: "يحذف خدمة محددة",
+          security: [{ cookieAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+              description: "معرف الخدمة",
+            },
+          ],
+          responses: {
+            200: {
+              description: "تم الحذف",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: { type: "object" },
+                    },
+                  },
+                },
+              },
+            },
+            404: { description: "الخدمة غير موجودة" },
+          },
+        },
+      },
+      // ==================== Worker Portfolio ====================
+      "/workers/works": {
+        get: {
+          tags: ["Workers Portfolio"],
+          summary: "أعمال الصنايعي (Portfolio)",
+          description: "يعيد قائمة أعمال الصنايعي المسجل",
+          security: [{ cookieAuth: [] }],
+          responses: {
+            200: {
+              description: "قائمة الأعمال",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/WorkerWork" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        post: {
+          tags: ["Workers Portfolio"],
+          summary: "إضافة عمل جديد",
+          description: "يضيف الصنايعي عمل جديد إلى Portfolio",
+          security: [{ cookieAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CreateWorkInput" },
+              },
+            },
+          },
+          responses: {
+            201: {
+              description: "تمت الإضافة",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: { $ref: "#/components/schemas/WorkerWork" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      "/workers/works/{id}": {
+        get: {
+          tags: ["Workers Portfolio"],
+          summary: "عمل معين",
+          description: "يعيد عمل محدد من Portfolio",
+          security: [{ cookieAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+              description: "معرف العمل",
+            },
+          ],
+          responses: {
+            200: {
+              description: "بيانات العمل",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: { $ref: "#/components/schemas/WorkerWork" },
+                    },
+                  },
+                },
+              },
+            },
+            404: { description: "العمل غير موجود" },
+          },
+        },
+        put: {
+          tags: ["Workers Portfolio"],
+          summary: "تحديث عمل",
+          description: "يحدث بيانات عمل (فقط الـ outside source)",
+          security: [{ cookieAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+              description: "معرف العمل",
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CreateWorkInput" },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: "تم التحديث",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: { $ref: "#/components/schemas/WorkerWork" },
+                    },
+                  },
+                },
+              },
+            },
+            403: { description: "لا يمكن تعديل الأعمال المنفذة عبر المنصة" },
+            404: { description: "العمل غير موجود" },
+          },
+        },
+        delete: {
+          tags: ["Workers Portfolio"],
+          summary: "حذف عمل",
+          description: "يحذف عمل (فقط الـ outside source)",
+          security: [{ cookieAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+              description: "معرف العمل",
+            },
+          ],
+          responses: {
+            200: {
+              description: "تم الحذف",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: { type: "object" },
+                    },
+                  },
+                },
+              },
+            },
+            403: { description: "لا يمكن حذف الأعمال المنفذة عبر المنصة" },
+            404: { description: "العمل غير موجود" },
+          },
+        },
+      },
+      // ==================== Orders ====================
+      "/orders/{workerId}": {
+        post: {
+          tags: ["Orders"],
+          summary: "إنشاء طلب خدمة (بدون تسجيل)",
+          description: "ينشئ طلب خدمة لصنايعي معين (بدون الحاجة لتسجيل دخول)",
+          parameters: [
+            {
+              name: "workerId",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+              description: "معرف الصنايعي",
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CreateOrderInput" },
+              },
+            },
+          },
+          responses: {
+            201: {
+              description: "تم إرسال الطلب",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      message: { type: "string" },
+                      data: { type: "object" },
+                    },
+                  },
+                },
+              },
+            },
+            400: { description: "خطأ: التخصص لا يطابق" },
+            404: { description: "الصنايعي غير موجود" },
+          },
+        },
+      },
       // ==================== Upload ====================
       "/upload": {
         get: {
@@ -818,15 +1611,23 @@ const options = {
         get: {
           tags: ["Requests"],
           summary: "إحصائيات الطلبات",
-          description: "حسب صلاحية المستخدم:\n- **client**: إحصائيات طلباته فقط\n- **admin**: إحصائيات كل الطلبات\n- **worker**: ممنوع (403)\n- يمكن تمرير `?user=id` يدوياً لإحصائيات مستخدم معين",
+          description: "حسب صلاحية المستخدم:\n- **client**: إحصائيات طلباته (`{ user: req.user.id }`)\n- **worker**: إحصائيات الطلبات المطلوبة منه (`{ worker: req.user.id }`)\n- **admin**: إحصائيات كل الطلبات (يمكن تمرير `?user=` أو `?worker=` للفلترة)",
           security: [{ cookieAuth: [] }],
           parameters: [
             {
               name: "user",
               in: "query",
-              description: "اختياري - ID المستخدم (للتجربة)، يتجاوز صلاحية التوكن",
+              description: "فلتر حسب المستخدم (لـ admin فقط)",
               schema: { type: "string" },
               example: "6a1d0d12a0e18535a1179a0a",
+              required: false,
+            },
+            {
+              name: "worker",
+              in: "query",
+              description: "فلتر حسب الصنايعي (لـ admin فقط)",
+              schema: { type: "string" },
+              example: "6a1d1a1cec88395a3e2dadae",
               required: false,
             },
           ],
@@ -845,7 +1646,7 @@ const options = {
                 },
               },
             },
-            403: { description: "الصنايعي لا يمكنه عرض الإحصائيات" },
+            403: { description: "غير مصرح لك" },
           },
         },
       },
@@ -881,7 +1682,7 @@ const options = {
         get: {
           tags: ["Requests"],
           summary: "قائمة الطلبات",
-          description: "يعيد جميع الطلبات مع فلتر اختياري حسب الحالة",
+          description: "يعيد الطلبات. الـ **client** يشوف طلباته، الـ **admin** يشوف الكل.\nالـ **worker** يستخدم `GET /requests/my-worker` المخصص له.",
           security: [{ cookieAuth: [] }],
           parameters: [
             {
@@ -890,14 +1691,6 @@ const options = {
               description: "فلتر حسب الحالة (معلقة، مقبولة، قيد التنفيذ، مكتملة، مرفوضة، ملغية)",
               schema: { type: "string" },
               example: "معلقة",
-              required: false,
-            },
-            {
-              name: "user",
-              in: "query",
-              description: "فلتر حسب المستخدم (معرف الـ ID)",
-              schema: { type: "string" },
-              example: "6a1d0d12a0e18535a1179a0a",
               required: false,
             },
           ],
@@ -925,18 +1718,8 @@ const options = {
         post: {
           tags: ["Requests"],
           summary: "إنشاء طلب جديد",
-          description: "إنشاء طلب خدمة جديد",
+          description: "إنشاء طلب خدمة جديد. الـ `user` ياخد من التوكن تلقائياً.",
           security: [{ cookieAuth: [] }],
-          parameters: [
-            {
-              name: "user",
-              in: "query",
-              description: "اختياري - ID المستخدم (للتجربة في Swagger)، لو مفيهوش هياخد من التوكن",
-              schema: { type: "string" },
-              example: "6a1d0d12a0e18535a1179a0a",
-              required: false,
-            },
-          ],
           requestBody: {
             required: true,
             content: {
@@ -968,7 +1751,7 @@ const options = {
         get: {
           tags: ["Requests"],
           summary: "طلب معين",
-          description: "يعيد طلب محدد حسب الـ ID",
+          description: "يعيد طلب محدد حسب الـ ID (صاحب الطلب، الصنايعي المسؤول، أو admin فقط)",
           security: [{ cookieAuth: [] }],
           parameters: [
             {
@@ -994,6 +1777,7 @@ const options = {
                 },
               },
             },
+            403: { description: "لا يمكنك الاطلاع على هذا الطلب" },
             404: { description: "الطلب غير موجود" },
           },
         },
@@ -1002,7 +1786,7 @@ const options = {
         patch: {
           tags: ["Requests"],
           summary: "تحديث حالة الطلب",
-          description: "تحديث حالة طلب معين",
+          description: "تحديث حالة طلب معين (الصنايعي المسؤول أو admin فقط). إذا كانت `completed`، بينشئ إدخال Portfolio تلقائياً.",
           security: [{ cookieAuth: [] }],
           parameters: [
             {
@@ -1043,6 +1827,7 @@ const options = {
                 },
               },
             },
+            403: { description: "لا يمكنك تعديل حالة هذا الطلب" },
             404: { description: "الطلب غير موجود" },
           },
         },
@@ -1051,7 +1836,7 @@ const options = {
         patch: {
           tags: ["Requests"],
           summary: "إلغاء طلب",
-          description: "إلغاء طلب معلق فقط",
+          description: "إلغاء طلب معلق (صاحب الطلب أو admin فقط)",
           security: [{ cookieAuth: [] }],
           parameters: [
             {
@@ -1085,6 +1870,7 @@ const options = {
               },
             },
             400: { description: "لا يمكن إلغاء طلب غير معلق" },
+            403: { description: "لا يمكنك إلغاء هذا الطلب" },
             404: { description: "الطلب غير موجود" },
           },
         },
@@ -1093,7 +1879,7 @@ const options = {
         post: {
           tags: ["Ratings"],
           summary: "إنشاء تقييم لطلب",
-          description: "تقييم طلب مكتمل (مرة واحدة فقط)",
+          description: "تقييم طلب مكتمل (مرة واحدة فقط، صاحب الطلب فقط)",
           security: [{ cookieAuth: [] }],
           parameters: [
             {
@@ -1128,12 +1914,14 @@ const options = {
               },
             },
             400: { description: "الطلب غير مكتمل أو تم تقييمه من قبل" },
+            403: { description: "فقط صاحب الطلب يمكنه التقييم" },
             404: { description: "الطلب غير موجود" },
           },
         },
         get: {
           tags: ["Ratings"],
           summary: "عرض تقييم الطلب",
+          description: "يعيد تقييم طلب معين",
           security: [{ cookieAuth: [] }],
           parameters: [
             {
@@ -1165,6 +1953,7 @@ const options = {
         patch: {
           tags: ["Ratings"],
           summary: "تعديل التقييم",
+          description: "تعديل تقييمك أنت فقط",
           security: [{ cookieAuth: [] }],
           parameters: [
             {
@@ -1198,12 +1987,14 @@ const options = {
                 },
               },
             },
+            403: { description: "لا يمكنك تعديل تقييم غيرك" },
             404: { description: "لا يوجد تقييم لهذا الطلب" },
           },
         },
         delete: {
           tags: ["Ratings"],
           summary: "حذف التقييم",
+          description: "حذف تقييمك أنت أو admin",
           security: [{ cookieAuth: [] }],
           parameters: [
             {
@@ -1229,6 +2020,7 @@ const options = {
                 },
               },
             },
+            403: { description: "لا يمكنك حذف تقييم غيرك" },
             404: { description: "لا يوجد تقييم لهذا الطلب" },
           },
         },

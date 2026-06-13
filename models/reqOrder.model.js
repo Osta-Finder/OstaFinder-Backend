@@ -27,7 +27,7 @@ const reqSchema = new mongoose.Schema(
       required: [true, "رقم الجوال مطلوب للتواصل"],
     },
     preferredTime: {
-      type: Date,
+      type: String,
       required: [true, "يرجى تحديد وقت الزيارة المفضل"],
     },
 
