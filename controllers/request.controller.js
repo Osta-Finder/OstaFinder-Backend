@@ -60,7 +60,8 @@ const formatRequest = (r, rating) => ({
 const getRequestFilter = async (req, next) => {
   if (req.user.role === "admin") return {};
   if (req.user.role === "client") return { user: req.user.id };
-  return next(new ApiError("الصنايعي لا يمكنه عرض الإحصائيات", 403));
+  if (req.user.role === "worker") return { worker: req.user.id };
+  return next(new ApiError("غير مصرح لك", 403));
 };
 
 export const getRequests = asyncHandler(async (req, res, next) => {
