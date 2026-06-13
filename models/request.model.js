@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 
 const requestSchema = new mongoose.Schema({
-    client: {
+    user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User", // Assuming User model is the client
-        required: false, // Make false for now to allow mocked data insertion if needed
+        ref: "User",
+        required: true,
     },
     clientName: {
         type: String,
@@ -15,11 +15,24 @@ const requestSchema = new mongoose.Schema({
         ref: "Worker",
         required: true,
     },
-    serviceTitle: {
+    service: {
         type: String,
         required: true,
     },
-    location: {
+    date: {
+        type: Date,
+        required: true,
+    },
+    address: {
+        type: String,
+        required: true,
+    },
+    amount: {
+        type: Number,
+        required: true,
+        min: 0,
+    },
+    category: {
         type: String,
         required: true,
     },
@@ -31,14 +44,6 @@ const requestSchema = new mongoose.Schema({
         type: String,
         enum: ["normal", "urgent"],
         default: "normal",
-    },
-    price: {
-        type: Number,
-        default: null,
-    },
-    category: {
-        type: String,
-        required: true,
     },
     status: {
       type: String,

@@ -2,7 +2,6 @@ import asyncHandler from "express-async-handler";
 
 import Request from "../models/request.model.js";
 import Rating from "../models/rating.model.js";
-import User from "../models/user.model.js";
 import Worker from "../models/worker.model.js";
 import Portfolio from "../models/portfolio.model.js";
 import ApiError from "../utils/ApiError.js";
@@ -33,14 +32,14 @@ const reverseStatusMap = {
 // @access  Private
 export const getRequests = asyncHandler(async (req, res, next) => {
     const filter = {};
+    if (req.user.role !== "admin") {
+      filter.user = req.user.id;
+    }
     if (req.query.status) {
       const mappedStatus = reverseStatusMap[req.query.status];
       if (mappedStatus) {
         filter.status = mappedStatus;
       }
-    }
-    if (req.query.user) {
-      filter.user = req.query.user;
     }
     const requests = await Request.find(filter)
       .populate("worker", "name phoneNumber")
@@ -109,21 +108,15 @@ export const getMyWorkerRequests = asyncHandler(async (req, res, next) => {
 export const getRequestStats = asyncHandler(async (req, res, next) => {
     let filter = {};
 
-    if (req.query.user) {
-      filter.user = req.query.user;
-    } else {
-      const user = await User.findById(req.user.id);
-      if (user && user.role === "admin") {
-        // admin sees all
-      } else if (user && user.role === "client") {
-        filter.user = req.user.id;
-      } else {
-        const worker = await Worker.findById(req.user.id);
-        if (worker) {
-          return next(new ApiError("الصنايعي لا يمكنه عرض الإحصائيات", 403));
-        }
-        filter.user = req.user.id;
+    if (req.user.role === "admin") {
+      // admin sees all, can filter by ?user=
+      if (req.query.user) {
+        filter.user = req.query.user;
       }
+    } else if (req.user.role === "client") {
+      filter.user = req.user.id;
+    } else {
+      return next(new ApiError("الصنايعي لا يمكنه عرض الإحصائيات", 403));
     }
 
     const all = await Request.countDocuments(filter);
@@ -160,6 +153,13 @@ export const getRequestById = asyncHandler(async (req, res, next) => {
       return next(new ApiError("الطلب غير موجود", 404));
     }
 
+    const isOwner = request.user._id.toString() === req.user.id;
+    const isWorker = request.worker._id.toString() === req.user.id;
+    const isAdmin = req.user.role === "admin";
+    if (!isOwner && !isWorker && !isAdmin) {
+      return next(new ApiError("لا يمكنك الاطلاع على هذا الطلب", 403));
+    }
+
     const rating = await Rating.findOne({ request: req.params.id }).select("stars comment createdAt");
 
     res.status(200).json({
@@ -194,7 +194,7 @@ export const createRequest = asyncHandler(async (req, res, next) => {
     const request = await Request.create({
       service,
       worker,
-      user: req.query.user || req.user.id,
+      user: req.user.id,
       date,
       address,
       amount,
@@ -222,37 +222,47 @@ export const createRequest = asyncHandler(async (req, res, next) => {
 // @route   PATCH /requests/:id/status
 // @access  Private
 export const updateRequestStatus = asyncHandler(async (req, res, next) => {
-    const request = await Request.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true },
-    );
-
-    if (!request) {
+    const existingRequest = await Request.findById(req.params.id);
+    if (!existingRequest) {
       return next(new ApiError("الطلب غير موجود", 404));
     }
 
+    const isWorker = existingRequest.worker.toString() === req.user.id;
+    const isAdmin = req.user.role === "admin";
+    if (!isWorker && !isAdmin) {
+      return next(new ApiError("لا يمكنك تعديل حالة هذا الطلب", 403));
+    }
+
+    const updateFields = {};
+    if (req.body.status) updateFields.status = req.body.status;
+    if (req.body.eta !== undefined) updateFields.eta = req.body.eta;
+
+    const request = await Request.findByIdAndUpdate(
+      req.params.id,
+      updateFields,
+      { new: true, runValidators: true },
+    );
+
     // Auto-create portfolio item when a request is completed.
-    // This is the SINGLE canonical place where this logic lives.
     if (req.body.status === "completed") {
       const existingPortfolio = await Portfolio.findOne({
         worker: request.worker,
-        title: request.serviceTitle,
+        title: request.service,
         clientName: request.clientName,
         source: "platform",
       });
       if (!existingPortfolio) {
         await Portfolio.create({
           worker: request.worker,
-          title: request.serviceTitle,
+          title: request.service,
           category: request.category,
           clientName: request.clientName,
           description: `تم إنجاز هذا العمل بنجاح عبر منصة أوسطى فايندر.`,
           date: new Date(),
           source: "platform",
           status: "completed",
-          location: request.location,
-          price: request.price || 0,
+          location: request.address,
+          price: request.amount || 0,
           images: [],
         });
       }
@@ -277,6 +287,12 @@ export const cancelRequest = asyncHandler(async (req, res, next) => {
 
     if (!request) {
       return next(new ApiError("الطلب غير موجود", 404));
+    }
+
+    const isOwner = request.user.toString() === req.user.id;
+    const isAdmin = req.user.role === "admin";
+    if (!isOwner && !isAdmin) {
+      return next(new ApiError("لا يمكنك إلغاء هذا الطلب", 403));
     }
 
     if (request.status !== "pending") {
