@@ -1,6 +1,13 @@
 import express from "express";
 import multer from "multer";
-import { getTopWorkersByCategory, getWorkers, submitOnboarding, getWorkerProfile, getPendingWorkers, updateWorkerApproval } from "../controllers/worker.controller.js";
+import {
+  getTopWorkersByCategory,
+  getWorkers,
+  submitOnboarding,
+  getWorkerProfile,
+  getPendingWorkers,
+  updateWorkerApproval,
+} from "../controllers/worker.controller.js";
 import { protect } from "../middlewares/auth.middleware.js";
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -10,11 +17,6 @@ import {
   getDashboardRequests,
   getIncomingRequests,
   updateRequestStatus,
-  getWorkerServices,
-  getWorkerServiceById,
-  addWorkerService,
-  updateWorkerService,
-  deleteWorkerService,
   getWorkerWorks,
   getWorkerWorkById,
   addWorkerWork,
@@ -22,14 +24,22 @@ import {
   deleteWorkerWork,
 } from "../controllers/worker.controller.js";
 
+import {
+  getWorkerServices,
+  getWorkerServiceById,
+  addWorkerService,
+  updateWorkerService,
+  deleteWorkerService,
+} from "../controllers/services.controller.js";
+
 const router = express.Router();
 
-router.get("/profile", protect, getWorkerProfile)
-router.post("/onboarding", protect, upload.none(), submitOnboarding)
-router.get("/pending-approval", getPendingWorkers)
-router.patch("/:workerId/approval", updateWorkerApproval)
-router.get("/top-by-category", getTopWorkersByCategory)
-router.get("/", getWorkers)
+router.get("/profile", protect, getWorkerProfile);
+router.post("/onboarding", protect, upload.none(), submitOnboarding);
+router.get("/pending-approval", getPendingWorkers);
+router.patch("/:workerId/approval", updateWorkerApproval);
+router.get("/top-by-category", getTopWorkersByCategory);
+router.get("/", getWorkers);
 import Worker from "../models/worker.model.js";
 
 router.use(verifyToken); // Disabled for testing
@@ -68,7 +78,10 @@ router
   .delete(deleteWorkerService);
 
 // Portfolio / Works
-router.route("/works").get(getWorkerWorks).post(addWorkerWork);
+router
+  .route("/works")
+  .get(protect, getWorkerWorks)
+  .post(protect, addWorkerWork);
 
 router
   .route("/works/:id")
