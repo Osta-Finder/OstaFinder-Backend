@@ -82,13 +82,13 @@ await connectDB();
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Routes
-app.use("/api/auth", authRoute);
-app.use("/api/requests", requestRoutes);
-app.use("/api/categories", categoryRoute);
-app.use("/api/workers", workerRoute);
-app.use("/api/orders", reqOrderRoute);
-app.use("/api/upload", uploadRoute);
-app.use("/api/users", userRoute);
+app.use("/auth", authRoute);
+app.use("/requests", requestRoutes);
+app.use("/categories", categoryRoute);
+app.use("/workers", workerRoute);
+app.use("/orders", reqOrderRoute);
+app.use("/upload", uploadRoute);
+app.use("/users", userRoute);
 
 //invalid route
 app.use((req, res, next) => {
