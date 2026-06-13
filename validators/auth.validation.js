@@ -13,8 +13,11 @@ export const registerSchema = Joi.object({
         .lowercase(),
 
     phoneNumber: Joi.string()
-        .pattern(/^01[0125][0-9]{8}$/)
-        .required(),
+        .pattern(/^01[0-2,5][0-9]{8}$/)
+        .required()
+        .messages({
+            "string.pattern.base": "رقم الهاتف يجب أن يكون صحيحاً"
+        }),
     role : Joi.string(),
     password: Joi.string()
         .min(8)

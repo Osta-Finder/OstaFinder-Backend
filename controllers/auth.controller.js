@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
-
 import User from "../models/user.model.js";
 import Worker from "../models/worker.model.js";
 import ApiError from "../utils/ApiError.js";
@@ -15,22 +14,21 @@ const buildAuthUser = (user) => ({
   email: user.email,
   role: user.role,
   phoneNumber: user.phoneNumber,
+  isOnboarded: user.isOnboarded,
+  onboardingCompleted: user.onboardingCompleted,
+  approvalStatus: user.approvalStatus,
   addresses: user.addresses || [],
 });
 
 const register = asyncHandler(async (req, res, next) => {
   let user;
-  //   console.log("done", req.body.role);
+
   if (req.body.role === "worker") {
     user = await Worker.create(req.body);
   } else {
     user = await User.create(req.body);
   }
-  //   const accessToken = user.generateAccessToken();
-  //   const refreshToken = user.generateRefreshToken();
 
-  //   user.refreshToken = refreshToken;
-  //   await user.save();
   res.status(201).json({
     message: "user created sucessfully",
     user: buildAuthUser(user),
@@ -69,10 +67,7 @@ const login = asyncHandler(async (req, res, next) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
   user.refreshToken = refreshToken;
-  //   user.accessToken = accessToken;
   await user.save();
-
-  // console.log(req.cookies);
 
   res.status(200).json({
     message: "Logged in successfully",
@@ -113,7 +108,7 @@ const refreshTokenHandler = asyncHandler(async (req, res, next) => {
   res.json({ message: "Token refreshed" });
 });
 
-const logout =asyncHandler(async (req, res) => {
+const logout = asyncHandler(async (req, res) => {
   res.clearCookie("accessToken", {
     httpOnly: true,
     secure: false,
@@ -126,7 +121,7 @@ const logout =asyncHandler(async (req, res) => {
     sameSite: "lax",
   });
   req.user.refreshToken = null;
-    await req.user.save();
+  await req.user.save();
   res.json({ message: "Logged out" });
 });
 
@@ -158,4 +153,4 @@ const updateMe = asyncHandler(async (req, res) => {
   });
 });
 
-export default { register, login, logout, getMe, updateMe, refreshTokenHandler};
+export default { register, login, logout, getMe, updateMe, refreshTokenHandler };
