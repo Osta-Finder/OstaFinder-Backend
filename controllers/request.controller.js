@@ -52,6 +52,7 @@ const formatRequest = (r, rating) => ({
   date: r.date,
   address: r.address,
   amount: r.amount,
+  image: r.image || null,
   status: statusMap[r.status] || r.status,
   eta: r.eta || "",
   rating: rating || null,
@@ -146,7 +147,7 @@ export const getRequestById = asyncHandler(async (req, res, next) => {
 });
 
 export const createRequest = asyncHandler(async (req, res, next) => {
-  const { service, worker, date, address, amount } = req.body;
+  const { service, worker, date, address, amount, image } = req.body;
 
   const workerExists = await Worker.findById(worker);
   if (!workerExists) return next(new ApiError("الصنايعي غير موجود", 404));
@@ -158,6 +159,7 @@ export const createRequest = asyncHandler(async (req, res, next) => {
     date,
     address,
     amount,
+    image,
   });
 
   const populated = await request.populate("worker", "name phoneNumber");
@@ -172,6 +174,7 @@ export const createRequest = asyncHandler(async (req, res, next) => {
       date: populated.date,
       address: populated.address,
       amount: populated.amount,
+      image: populated.image || null,
       status: statusMap[populated.status],
       eta: populated.eta || "",
     },

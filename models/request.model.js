@@ -50,6 +50,10 @@ const requestSchema = new mongoose.Schema({
       enum: ["pending", "accepted", "on_the_way", "in_progress", "completed", "rejected", "cancelled"],
       default: "pending",
     },
+    image: {
+      type: String,
+      default: null,
+    },
     eta: {
       type: String,
       default: "",
