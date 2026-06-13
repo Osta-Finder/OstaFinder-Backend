@@ -31,7 +31,7 @@ app.use(
 
 const connectDB = async () => {
   try {
-    await mongoose.connect("mongodb://127.0.0.1:27017/test");
+    await mongoose.connect(process.env.DB_CONNECTION);
     console.log("DB connected successful");
     
     await seedCategories();

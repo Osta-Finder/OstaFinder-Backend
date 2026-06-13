@@ -51,9 +51,10 @@ export const getRequests = asyncHandler(async (req, res, next) => {
     const ratings = await Rating.find({ request: { $in: requestIds } }).select("stars comment createdAt request");
     const ratingMap = {};
     ratings.forEach((rt) => {
-      if (rt.request) {
-        ratingMap[rt.request.toString()] = { _id: rt._id, stars: rt.stars, comment: rt.comment, createdAt: rt.createdAt };
-      }
+       ratingMap[rt.request.toString()] = { _id: rt._id, stars: rt.stars, comment: rt.comment, createdAt: rt.createdAt };
+      // if (rt.request) {
+      //   ratingMap[rt.request.toString()] = { _id: rt._id, stars: rt.stars, comment: rt.comment, createdAt: rt.createdAt };
+      // }
     });
 
     const result = requests.map((r) => ({
@@ -85,9 +86,11 @@ export const getMyWorkerRequests = asyncHandler(async (req, res, next) => {
     const ratings = await Rating.find({ request: { $in: requestIds } }).select("stars comment createdAt request");
     const ratingMap = {};
     ratings.forEach((rt) => {
-      if (rt.request) {
-        ratingMap[rt.request.toString()] = { _id: rt._id, stars: rt.stars, comment: rt.comment, createdAt: rt.createdAt };
-      }
+
+      ratingMap[rt.request.toString()] = { _id: rt._id, stars: rt.stars, comment: rt.comment, createdAt: rt.createdAt };
+      // if (rt.request) {
+      //   ratingMap[rt.request.toString()] = { _id: rt._id, stars: rt.stars, comment: rt.comment, createdAt: rt.createdAt };
+      // }
     });
 
     const result = requests.map((r) => ({
