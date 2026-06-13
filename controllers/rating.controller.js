@@ -16,6 +16,10 @@ export const createRating = asyncHandler(async (req, res, next) => {
       return next(new ApiError("لا يمكن تقييم طلب غير مكتمل", 400));
     }
 
+    if (request.user.toString() !== req.user.id) {
+      return next(new ApiError("فقط صاحب الطلب يمكنه التقييم", 403));
+    }
+
     const existing = await Rating.findOne({ request: req.params.id });
     if (existing) {
       return next(new ApiError("تم تقييم هذا الطلب من قبل", 400));
@@ -55,6 +59,10 @@ export const updateRating = asyncHandler(async (req, res, next) => {
       return next(new ApiError("لا يوجد تقييم لهذا الطلب", 404));
     }
 
+    if (rating.user.toString() !== req.user.id) {
+      return next(new ApiError("لا يمكنك تعديل تقييم غيرك", 403));
+    }
+
     if (req.body.stars !== undefined) rating.stars = req.body.stars;
     if (req.body.comment !== undefined) rating.comment = req.body.comment;
     await rating.save();
@@ -66,10 +74,16 @@ export const updateRating = asyncHandler(async (req, res, next) => {
 // @route   DELETE /requests/:id/rating
 // @access  Private
 export const deleteRating = asyncHandler(async (req, res, next) => {
-    const rating = await Rating.findOneAndDelete({ request: req.params.id });
+    const rating = await Rating.findOne({ request: req.params.id });
     if (!rating) {
       return next(new ApiError("لا يوجد تقييم لهذا الطلب", 404));
     }
+
+    if (rating.user.toString() !== req.user.id && req.user.role !== "admin") {
+      return next(new ApiError("لا يمكنك حذف تقييم غيرك", 403));
+    }
+
+    await Rating.findByIdAndDelete(rating._id);
 
     res.status(200).json({ success: true, message: "تم حذف التقييم بنجاح" });
 });

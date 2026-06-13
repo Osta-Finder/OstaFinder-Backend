@@ -23,6 +23,9 @@ const createRequestSchema = joi.object({
     "number.min": "المبلغ يجب أن يكون أكبر من صفر",
     "any.required": "المبلغ مطلوب",
   }),
+  image: joi.string().optional().allow(null).uri().messages({
+    "string.uri": "رابط الصورة غير صحيح",
+  }),
 });
 
 const updateStatusSchema = joi.object({

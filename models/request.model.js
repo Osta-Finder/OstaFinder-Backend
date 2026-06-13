@@ -1,10 +1,31 @@
 import mongoose from "mongoose";
 
+export const statusMap = {
+  pending: "معلقة",
+  accepted: "مقبولة",
+  on_the_way: "في الطريق",
+  in_progress: "قيد التنفيذ",
+  completed: "مكتملة",
+  rejected: "مرفوضة",
+  cancelled: "ملغية",
+};
+
+export const reverseStatusMap = {
+  الكل: null,
+  معلقة: "pending",
+  مقبولة: "accepted",
+  "في الطريق": "on_the_way",
+  "قيد التنفيذ": "in_progress",
+  مكتملة: "completed",
+  مرفوضة: "rejected",
+  ملغية: "cancelled",
+};
+
 const requestSchema = new mongoose.Schema({
-    client: {
+    user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User", // Assuming User model is the client
-        required: false, // Make false for now to allow mocked data insertion if needed
+        ref: "User",
+        required: true,
     },
     clientName: {
         type: String,
@@ -15,11 +36,24 @@ const requestSchema = new mongoose.Schema({
         ref: "Worker",
         required: true,
     },
-    serviceTitle: {
+    service: {
         type: String,
         required: true,
     },
-    location: {
+    date: {
+        type: Date,
+        required: true,
+    },
+    address: {
+        type: String,
+        required: true,
+    },
+    amount: {
+        type: Number,
+        required: true,
+        min: 0,
+    },
+    category: {
         type: String,
         required: true,
     },
@@ -32,18 +66,14 @@ const requestSchema = new mongoose.Schema({
         enum: ["normal", "urgent"],
         default: "normal",
     },
-    price: {
-        type: Number,
-        default: null,
-    },
-    category: {
-        type: String,
-        required: true,
-    },
     status: {
       type: String,
       enum: ["pending", "accepted", "on_the_way", "in_progress", "completed", "rejected", "cancelled"],
       default: "pending",
+    },
+    image: {
+      type: String,
+      default: null,
     },
     eta: {
       type: String,
