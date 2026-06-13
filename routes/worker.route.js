@@ -24,6 +24,14 @@ import {
   getWorkerPublicReviews
 } from "../controllers/worker.profile.controller.js";
 
+import {
+  getWorkerServices,
+  getWorkerServiceById,
+  addWorkerService,
+  updateWorkerService,
+  deleteWorkerService,
+} from "../controllers/services.controller.js";
+
 const router = express.Router();
 
 router.get("/profile", protect, getWorkerProfile)
