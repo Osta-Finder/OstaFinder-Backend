@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
-
 import User from "../models/user.model.js";
 import Worker from "../models/worker.model.js";
 import ApiError from "../utils/ApiError.js";
@@ -9,10 +8,31 @@ import {
   generateRefreshToken,
 } from "../utils/authToken.js";
 
+const buildAuthUser = (user) => ({
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  phoneNumber: user.phoneNumber,
+  role: user.role,
+  category: user.category,
+  price: user.price,
+  rating: user.rating,
+  isOnline: user.isOnline,
+  isOnboarded: user.isOnboarded,
+  onboardingCompleted: user.onboardingCompleted,
+  approvalStatus: user.approvalStatus,
+  approvedAt: user.approvedAt,
+  yearsOfExperience: user.yearsOfExperience,
+  bio: user.bio,
+  nationalId: user.nationalId,
+  certifications: user.certifications,
+  addresses: user.addresses || [],
+  profilePic: user.profilePic,
+});
 
 const register = asyncHandler(async (req, res, next) => {
   let user;
-  
+
   if (req.body.role === "worker") {
     user = await Worker.create(req.body);
   } else {
@@ -21,13 +41,7 @@ const register = asyncHandler(async (req, res, next) => {
 
   res.status(201).json({
     message: "user created sucessfully",
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phoneNumber: user.phoneNumber,
-    },
+    user: buildAuthUser(user),
   });
 });
 
@@ -67,16 +81,7 @@ const login = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     message: "Logged in successfully",
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phoneNumber: user.phoneNumber,
-      isOnboarded: user.isOnboarded,
-      onboardingCompleted: user.onboardingCompleted,
-      approvalStatus: user.approvalStatus,
-    },
+    user: buildAuthUser(user),
   });
 });
 
@@ -131,36 +136,31 @@ const logout = asyncHandler(async (req, res) => {
 });
 
 const getMe = asyncHandler(async (req, res) => {
-  res.json({
-    _id: req.user._id,
-    name: req.user.name,
-    email: req.user.email,
-    role: req.user.role,
-    phoneNumber: req.user.phoneNumber,
-    isOnboarded: req.user.isOnboarded,
-    onboardingCompleted: req.user.onboardingCompleted,
-    approvalStatus: req.user.approvalStatus,
-  });
+  //   const user = await User.findById(req.user.id);
+  //   console.log(req.user);
+  res.json(buildAuthUser(req.user));
 });
 
 const updateMe = asyncHandler(async (req, res) => {
-  const { name, email, phoneNumber } = req.body;
+  const allowedFields = [
+    "name",
+    "email",
+    "phoneNumber",
+    "addresses",
+    "profilePic",
+  ];
 
-  if (name !== undefined) req.user.name = name;
-  if (email !== undefined) req.user.email = email;
-  if (phoneNumber !== undefined) req.user.phoneNumber = phoneNumber;
+  allowedFields.forEach((field) => {
+    if (req.body[field] !== undefined) {
+      req.user[field] = req.body[field];
+    }
+  });
 
   await req.user.save();
 
   res.json({
     message: "User updated successfully",
-    user: {
-      _id: req.user._id,
-      name: req.user.name,
-      email: req.user.email,
-      role: req.user.role,
-      phoneNumber: req.user.phoneNumber,
-    },
+    user: buildAuthUser(req.user),
   });
 });
 

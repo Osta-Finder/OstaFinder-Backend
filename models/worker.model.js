@@ -80,8 +80,9 @@ const workerSchema = new mongoose.Schema({
     bio: {
         type: String,
     },
-    profilePicture: {
+    profilePic: {
         type: String,
+        default: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
     },
     nationalId: {
         type: String,
