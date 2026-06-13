@@ -70,21 +70,10 @@ export const getRequests = asyncHandler(async (req, res, next) => {
 // @route   GET /requests/my-worker
 // @access  Private (worker only)
 export const getMyWorkerRequests = asyncHandler(async (req, res, next) => {
-    const requests = await Request.find({ worker: req.user.id })
-      .populate("worker", "name phoneNumber")
-      .populate("user", "name phoneNumber")
-      .sort({ createdAt: -1 });
-
-    const requestIds = requests.map((r) => r._id);
-    const ratings = await Rating.find({ request: { $in: requestIds } }).select("stars comment createdAt request");
-    const ratingMap = {};
-    ratings.forEach((rt) => {
-
-      ratingMap[rt.request.toString()] = { _id: rt._id, stars: rt.stars, comment: rt.comment, createdAt: rt.createdAt };
-      // if (rt.request) {
-      //   ratingMap[rt.request.toString()] = { _id: rt._id, stars: rt.stars, comment: rt.comment, createdAt: rt.createdAt };
-      // }
-    });
+  const requests = await Request.find({ worker: req.user.id })
+    .populate("worker", "name phoneNumber")
+    .populate("user", "name phoneNumber")
+    .sort({ createdAt: -1 });
 
   const ratingMap = await getRatingMap(requests);
   const data = requests.map((r) => formatRequest(r, ratingMap[r._id.toString()]));
