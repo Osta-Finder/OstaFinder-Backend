@@ -1,4 +1,4 @@
-﻿import mongoose from "mongoose";
+import mongoose from "mongoose";
 import asyncHandler from "express-async-handler";
 
 import categoryModel from "../models/category.model.js";
@@ -27,11 +27,12 @@ export const getDashboardStats = async (req, res, next) => {
       worker: workerId,
       status: "completed",
     });
-    const totalEarningsResult = await Portfolio.aggregate([
+    const totalEarningsResult = await Request.aggregate([
       {
         $match: {
           worker: new mongoose.Types.ObjectId(workerId),
-          source: "platform",
+          status: "completed",
+          price: { $ne: null },
         },
       },
       { $group: { _id: null, total: { $sum: "$price" } } },
@@ -128,120 +129,7 @@ export const updateRequestStatus = async (req, res, next) => {
   }
 };
 
-// ============================================
-// SERVICES
-// ============================================
-export const getWorkerServices = async (req, res, next) => {
-  try {
-    const workerId = getWorkerId(req);
 
-    if (!workerId) {
-      return next(new ApiError("Unauthorized", 401));
-    }
-
-    const services = await Service.find({ worker: workerId }).sort({
-      createdAt: -1,
-    });
-    res.status(200).json({ success: true, data: services });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getWorkerServiceById = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const workerId = getWorkerId(req);
-
-    if (!workerId) {
-      return next(new ApiError("Unauthorized", 401));
-    }
-
-    const service = await Service.findOne({ _id: id, worker: workerId });
-
-    if (!service) {
-      return next(new ApiError("Service not found", 404));
-    }
-
-    res.status(200).json({ success: true, data: service });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const addWorkerService = async (req, res, next) => {
-  try {
-    const workerId = getWorkerId(req);
-
-    if (!workerId) {
-      return next(new ApiError("Unauthorized", 401));
-    }
-
-    const { title, category, price, description, location } = req.body;
-
-    const service = await Service.create({
-      worker: workerId,
-      title,
-      category,
-      price,
-      description,
-      location,
-    });
-
-    res.status(201).json({ success: true, data: service });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const updateWorkerService = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const workerId = getWorkerId(req);
-
-    if (!workerId) {
-      return next(new ApiError("Unauthorized", 401));
-    }
-
-    const service = await Service.findOneAndUpdate(
-      { _id: id, worker: workerId },
-      req.body,
-      { new: true },
-    );
-
-    if (!service) {
-      return next(new ApiError("Service not found", 404));
-    }
-
-    res.status(200).json({ success: true, data: service });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const deleteWorkerService = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const workerId = getWorkerId(req);
-
-    if (!workerId) {
-      return next(new ApiError("Unauthorized", 401));
-    }
-
-    const service = await Service.findOneAndDelete({
-      _id: id,
-      worker: workerId,
-    });
-
-    if (!service) {
-      return next(new ApiError("Service not found", 404));
-    }
-
-    res.status(200).json({ success: true, data: {} });
-  } catch (error) {
-    next(error);
-  }
-};
 
 // ============================================
 // PORTFOLIO / WORKS
@@ -292,21 +180,16 @@ export const addWorkerWork = async (req, res, next) => {
       return next(new ApiError("Unauthorized", 401));
     }
 
-    const {
-      title,
-      category,
-      clientName,
-      description,
-      date,
-      status,
-      location,
-      price,
-    } = req.body;
+    const worker = await workerModel.findById(workerId).populate("category");
+    const categoryName = worker?.category?.name || "غير محدد";
+
+    const { title, clientName, description, date, status, location, price, images } =
+      req.body;
 
     const work = await Portfolio.create({
       worker: workerId,
       title,
-      category,
+      category: categoryName,
       clientName,
       description,
       date,
@@ -314,6 +197,7 @@ export const addWorkerWork = async (req, res, next) => {
       status: status || "completed",
       location,
       price,
+      images: images || [],
     });
 
     res.status(201).json({ success: true, data: work });
@@ -321,7 +205,6 @@ export const addWorkerWork = async (req, res, next) => {
     next(error);
   }
 };
-
 export const updateWorkerWork = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -338,7 +221,9 @@ export const updateWorkerWork = async (req, res, next) => {
     }
 
     if (existingWork.source === "platform") {
-      return next(new ApiError("لا يمكن تعديل الأعمال المنفذة عبر المنصة", 403));
+      return next(
+        new ApiError("لا يمكن تعديل الأعمال المنفذة عبر المنصة", 403),
+      );
     }
 
     const { source, ...updateData } = req.body;
@@ -425,10 +310,7 @@ export const getWorkers = asyncHandler(async (req, res, next) => {
 
   apiFeatures.paginate(countDocuments);
 
-  const workers = await apiFeatures.mongooseQuery.populate(
-    "category",
-    "name",
-  );
+  const workers = await apiFeatures.mongooseQuery.populate("category", "name");
 
   res.status(200).json({
     success: true,
@@ -598,7 +480,9 @@ export const getWorkerProfile = asyncHandler(async (req, res, next) => {
   }
 
   const workerId = getWorkerId(req);
-  const worker = await workerModel.findById(workerId).populate("category", "name");
+  const worker = await workerModel
+    .findById(workerId)
+    .populate("category", "name");
 
   if (!worker) {
     return res.status(404).json({
