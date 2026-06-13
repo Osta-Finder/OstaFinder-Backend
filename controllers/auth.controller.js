@@ -12,12 +12,22 @@ const buildAuthUser = (user) => ({
   _id: user._id,
   name: user.name,
   email: user.email,
-  role: user.role,
   phoneNumber: user.phoneNumber,
+  role: user.role,
+  category: user.category,
+  price: user.price,
+  rating: user.rating,
+  isOnline: user.isOnline,
   isOnboarded: user.isOnboarded,
   onboardingCompleted: user.onboardingCompleted,
   approvalStatus: user.approvalStatus,
+  approvedAt: user.approvedAt,
+  yearsOfExperience: user.yearsOfExperience,
+  bio: user.bio,
+  nationalId: user.nationalId,
+  certifications: user.certifications,
   addresses: user.addresses || [],
+  profilePic: user.profilePic,
 });
 
 const register = asyncHandler(async (req, res, next) => {
@@ -137,6 +147,7 @@ const updateMe = asyncHandler(async (req, res) => {
     "email",
     "phoneNumber",
     "addresses",
+    "profilePic",
   ];
 
   allowedFields.forEach((field) => {

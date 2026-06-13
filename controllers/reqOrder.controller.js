@@ -5,8 +5,7 @@ import ApiError from "../utils/ApiError.js";
 export const createOrder = async (req, res, next) => {
   try {
     const { workerId } = req.params;
-    // const customerId = req.user._id;
-    const customerId = "6a105ea041c973536f0d475a";
+    const customerId = req.user.id;
 
     const { category, description, phone, preferredTime, location } = req.body;
 
@@ -32,6 +31,23 @@ export const createOrder = async (req, res, next) => {
       success: true,
       message: "تم إرسال طلب الخدمة بنجاح وفي انتظار رد الفني",
       data: newOrder,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getOrders = async (req, res, next) => {
+  try {
+    const customerId = req.user.id;
+    const orders = await reqOrderModel.find({ customer: customerId })
+      .populate("category", "name")
+      .populate("worker", "name phone")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: orders,
     });
   } catch (err) {
     next(err);

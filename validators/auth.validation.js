@@ -104,4 +104,5 @@ export const updateMeSchema = Joi.object({
     phoneNumber: Joi.string()
         .pattern(/^01[0125][0-9]{8}$/),
     addresses: Joi.array().items(addressSchema),
+    profilePic: Joi.string().allow(""),
 }).min(1);
