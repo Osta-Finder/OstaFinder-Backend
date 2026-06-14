@@ -52,7 +52,7 @@ app.use("/auth", authRoute);
 app.use("/requests", requestRoutes);
 app.use("/categories", categoryRoute);
 app.use("/workers", workerRoute);
-app.use("/orders", reqOrderRoute)
+// app.use("/orders", reqOrderRoute)
 
 //invalid route
 app.use((req, res, next) => {

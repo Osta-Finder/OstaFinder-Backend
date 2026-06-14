@@ -143,8 +143,56 @@ const getMe = asyncHandler(async (req, res) => {
     email: req.user.email,
     role: req.user.role,
     phoneNumber: req.user.phoneNumber,
+    addresses: req.user.addresses,
   });
 });
 
+// Desc    Change password
+// Route   POST /auth/change-password
+// Access  Private
+const changePassword = asyncHandler(async (req, res, next) =>{
+  const {currentPassword, newPassword} = req.body;
 
-export default { register, login, logout, getMe, refreshTokenHandler};
+  // determine user model based on role
+  let user;
+  if(req.user.role === "worker"){
+    user = await Worker.findById(req.user._id)
+  }else{
+    user = await User.findById(req.user._id)
+  }
+  if(!user){
+    return next(new ApiError("لا يوجد مستخدم", 404));
+  }
+
+  // verify current password
+  const isMatch = await user.comparedPassword(currentPassword);
+  if(!isMatch){
+    return next(new ApiError("كلمة المرور الحالية غير صحيحة", 401));
+  }
+
+  // update to new password
+  user.password = newPassword;
+
+  // generate new tokens
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 15 * 60 * 1000,
+  });
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  res.status(200).json({message: "تم تغيير كلمة المرور بنجاح"});
+})
+
+export default { register, login, logout, getMe, refreshTokenHandler, changePassword};

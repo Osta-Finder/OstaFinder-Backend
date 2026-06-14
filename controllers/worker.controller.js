@@ -9,6 +9,26 @@ import ApiFeatures from "../utils/ApiFeatures.js";
 // @access  Public
 export const getWorkers = asyncHandler(async (req, res, next) => {
     let filter = {};
+    
+    if (req.query.category) {
+      const decodedSlug = decodeURIComponent(req.query.category);
+      
+      const categoryObj = await categoryModel.findOne({ slug: decodedSlug });
+
+      if (categoryObj) {
+        filter.category = categoryObj._id;
+        
+        delete req.query.category;
+      } else {
+        return res.status(200).json({
+          success: true,
+          results: 0,
+          pagination: {},
+          data: [],
+        });
+      }
+    }
+
     // Search
     if (req.query.keyword) {
       const matchingCategories = await categoryModel
@@ -33,16 +53,20 @@ export const getWorkers = asyncHandler(async (req, res, next) => {
         },
       ];
     }
+    
     // Build query
     const apiFeatures = new ApiFeatures(workerModel.find(filter), req.query)
       .filter()
       .sort();
+      
     // Get correct count after all filters
     const countDocuments = await workerModel.countDocuments(
       apiFeatures.mongooseQuery.getFilter(),
     );
+    
     // Pagination
     apiFeatures.paginate(countDocuments);
+    
     // Execute query
     const workers = await apiFeatures.mongooseQuery.populate(
       "category",

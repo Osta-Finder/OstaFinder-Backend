@@ -178,36 +178,39 @@ export const getRequestById = asyncHandler(async (req, res, next) => {
 // @route   POST /requests
 // @access  Private
 export const createRequest = asyncHandler(async (req, res, next) => {
-    const { service, worker, date, address, amount } = req.body;
+    const { date, address, phoneNumber, description, category, amount } = req.body;
 
-    const workerExists = await Worker.findById(worker);
+    const {workerId} = req.params
+    const userId = req.user._id
+
+    const workerExists = await Worker.findById(workerId);
     if (!workerExists) {
       return next(new ApiError("الصنايعي غير موجود", 404));
     }
 
-    const request = await Request.create({
-      service,
-      worker,
-      user: req.query.user || req.user.id,
-      date,
-      address,
-      amount,
+    const finalCategory = workerExists.category || category;
+
+    if (!finalCategory) {
+        return next(new ApiError("يجب تحديد فئة الخدمة", 400));
+    }
+
+    let request = await Request.create({
+     user: userId,
+        worker: workerId,
+        category: finalCategory, 
+        date,
+        address,
+        amount: amount || workerExists.price,
+        phoneNumber,
+        description
     });
 
-    const populated = await request.populate("worker", "name phoneNumber");
-
+    request = await request.populate("category", "name");
+    
     res.status(201).json({
       success: true,
-      data: {
-        _id: populated._id,
-        requestNumber: populated.requestNumber,
-        service: populated.service,
-        worker: populated.worker,
-        date: populated.date,
-        address: populated.address,
-        amount: populated.amount,
-        status: statusMap[populated.status],
-      },
+      message: "تم إرسال طلب الخدمة بنجاح وفي انتظار رد الفني",
+      data: request,
     });
 });
 

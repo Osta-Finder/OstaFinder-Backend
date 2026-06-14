@@ -28,7 +28,7 @@ const CategoySchema = new mongoose.Schema(
   },
 );
 
-CategoySchema.pre("save", function (next) {
+CategoySchema.pre("save", function(next) {
   if (this.isNew || this.isModified("name")) {
     this.slug = this.name
       .trim()
@@ -36,7 +36,6 @@ CategoySchema.pre("save", function (next) {
       .replace(/[\s_]+/g, "-")
       .replace(/[^\u0600-\u06FFa-z0-9-]+/g, "");
   }
-  next();
 });
 
 export default mongoose.model("Category", CategoySchema);

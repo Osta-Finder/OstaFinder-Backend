@@ -8,7 +8,7 @@ const requestSchema = new mongoose.Schema(
     },
     service: {
       type: String,
-      required: [true, "الخدمة مطلوبة"],
+      // required: [true, "الخدمة مطلوبة"],
       trim: true,
     },
     worker: {
@@ -21,10 +21,20 @@ const requestSchema = new mongoose.Schema(
       ref: "User",
       required: [true, "المستخدم مطلوب"],
     },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: [true, "يرجى تحديد فئة الخدمة"],
+    },
+    phoneNumber: {
+      type: String,
+      required: [true, "رقم الجوال مطلوب"],
+    },
     date: {
       type: Date,
       required: [true, "التاريخ مطلوب"],
     },
+    description: { type: String, required: true },
     address: {
       type: String,
       required: [true, "العنوان مطلوب"],
