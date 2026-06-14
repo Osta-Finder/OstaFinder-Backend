@@ -2,6 +2,50 @@ import mongoose from "mongoose";
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt'
 
+const addressSchema = new mongoose.Schema(
+    {
+        title: {
+            type: String,
+            trim: true,
+            default: "Home",
+        },
+        address: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        street: {
+            type: String,
+            trim: true,
+        },
+        city: {
+            type: String,
+            trim: true,
+        },
+        area: {
+            type: String,
+            trim: true,
+        },
+        buildingNumber: {
+            type: String,
+            trim: true,
+        },
+        floor: {
+            type: String,
+            trim: true,
+        },
+        apartment: {
+            type: String,
+            trim: true,
+        },
+        isDefault: {
+            type: Boolean,
+            default: false,
+        },
+    },
+    { _id: true }
+);
+
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -11,11 +55,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
+        sparse: true,
+        lowercase: true,
     },
     phoneNumber: {
         type: String,
-        unique: true,
-        required: true
+        required: true,
     },
     password: {
         type: String,
@@ -30,7 +75,14 @@ const userSchema = new mongoose.Schema({
         type: String,
     },
     passwordChangedAt: Date,
-    addresses: {type: String},
+    addresses: {
+        type: [addressSchema],
+        default: [],
+    },
+    profilePic: {
+        type: String,
+        default: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+    },
 }, {
     timestamps: true
 });

@@ -13,8 +13,11 @@ export const registerSchema = Joi.object({
         .lowercase(),
 
     phoneNumber: Joi.string()
-        .pattern(/^01[0125][0-9]{8}$/)
-        .required(),
+        .pattern(/^01[0-2,5][0-9]{8}$/)
+        .required()
+        .messages({
+            "string.pattern.base": "رقم الهاتف يجب أن يكون صحيحاً"
+        }),
     role : Joi.string(),
     password: Joi.string()
         .min(8)
@@ -36,6 +39,22 @@ export const registerSchema = Joi.object({
         .messages({
             "any.only": "Passwords do not match",
         }),
+    addresses: Joi.array()
+        .items(
+            Joi.object({
+                _id: Joi.string(),
+                title: Joi.string().trim().max(50),
+                address: Joi.string().trim().required(),
+                street: Joi.string().trim().allow(""),
+                city: Joi.string().trim().allow(""),
+                area: Joi.string().trim().allow(""),
+                buildingNumber: Joi.string().trim().allow(""),
+                floor: Joi.string().trim().allow(""),
+                apartment: Joi.string().trim().allow(""),
+                isDefault: Joi.boolean(),
+            })
+        )
+        .default([]),
 });
 
 
@@ -60,3 +79,30 @@ export const loginSchema = Joi.object({
         role : Joi.string()
 
 });
+
+const addressSchema = Joi.object({
+    _id: Joi.string(),
+    title: Joi.string().trim().max(50),
+    address: Joi.string().trim().required(),
+    street: Joi.string().trim().allow(""),
+    city: Joi.string().trim().allow(""),
+    area: Joi.string().trim().allow(""),
+    buildingNumber: Joi.string().trim().allow(""),
+    floor: Joi.string().trim().allow(""),
+    apartment: Joi.string().trim().allow(""),
+    isDefault: Joi.boolean(),
+});
+
+export const updateMeSchema = Joi.object({
+    name: Joi.string()
+        .min(3)
+        .max(30)
+        .trim(),
+    email: Joi.string()
+        .email()
+        .lowercase(),
+    phoneNumber: Joi.string()
+        .pattern(/^01[0125][0-9]{8}$/),
+    addresses: Joi.array().items(addressSchema),
+    profilePic: Joi.string().allow(""),
+}).min(1);

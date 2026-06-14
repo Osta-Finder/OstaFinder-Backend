@@ -36,18 +36,22 @@ const createRequestSchema = joi.object({
   category: joi.string().hex().length(24).optional().messages({
     "string.hex": "معرف الفئة يجب أن يكون صالحاً",
     "string.length": "معرف الفئة يجب أن يكون 24 حرفاً",
-  })
+  }),
+  image: joi.string().optional().allow(null).uri().messages({
+    "string.uri": "رابط الصورة غير صحيح",
+  }),
 });
 
 const updateStatusSchema = joi.object({
   status: joi
     .string()
-    .valid("pending", "accepted", "in_progress", "completed", "rejected")
+    .valid("pending", "accepted", "on_the_way", "in_progress", "completed", "rejected")
     .required()
     .messages({
       "any.only": "حالة غير صالحة",
       "any.required": "الحالة مطلوبة",
     }),
+  eta: joi.string().allow("").optional(),
 });
 
 export const createRequestValidator = validatorMiddleware(createRequestSchema);

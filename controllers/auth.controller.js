@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
-
 import User from "../models/user.model.js";
 import Worker from "../models/worker.model.js";
 import ApiError from "../utils/ApiError.js";
@@ -9,29 +8,40 @@ import {
   generateRefreshToken,
 } from "../utils/authToken.js";
 
+const buildAuthUser = (user) => ({
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  phoneNumber: user.phoneNumber,
+  role: user.role,
+  category: user.category,
+  price: user.price,
+  rating: user.rating,
+  isOnline: user.isOnline,
+  isOnboarded: user.isOnboarded,
+  onboardingCompleted: user.onboardingCompleted,
+  approvalStatus: user.approvalStatus,
+  approvedAt: user.approvedAt,
+  yearsOfExperience: user.yearsOfExperience,
+  bio: user.bio,
+  nationalId: user.nationalId,
+  certifications: user.certifications,
+  addresses: user.addresses || [],
+  profilePic: user.profilePic,
+});
 
 const register = asyncHandler(async (req, res, next) => {
   let user;
-  //   console.log("done", req.body.role);
+
   if (req.body.role === "worker") {
     user = await Worker.create(req.body);
   } else {
     user = await User.create(req.body);
   }
-  //   const accessToken = user.generateAccessToken();
-  //   const refreshToken = user.generateRefreshToken();
 
-  //   user.refreshToken = refreshToken;
-  //   await user.save();
   res.status(201).json({
     message: "user created sucessfully",
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phoneNumber: user.phoneNumber,
-    },
+    user: buildAuthUser(user),
   });
 });
 
@@ -67,20 +77,11 @@ const login = asyncHandler(async (req, res, next) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
   user.refreshToken = refreshToken;
-  //   user.accessToken = accessToken;
   await user.save();
-
-  // console.log(req.cookies);
 
   res.status(200).json({
     message: "Logged in successfully",
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phoneNumber: user.phoneNumber,
-    },
+    user: buildAuthUser(user),
   });
 });
 
@@ -117,7 +118,7 @@ const refreshTokenHandler = asyncHandler(async (req, res, next) => {
   res.json({ message: "Token refreshed" });
 });
 
-const logout =asyncHandler(async (req, res) => {
+const logout = asyncHandler(async (req, res) => {
   res.clearCookie("accessToken", {
     httpOnly: true,
     secure: false,
@@ -130,20 +131,36 @@ const logout =asyncHandler(async (req, res) => {
     sameSite: "lax",
   });
   req.user.refreshToken = null;
-    await req.user.save();
+  await req.user.save();
   res.json({ message: "Logged out" });
 });
 
 const getMe = asyncHandler(async (req, res) => {
   //   const user = await User.findById(req.user.id);
   //   console.log(req.user);
+  res.json(buildAuthUser(req.user));
+});
+
+const updateMe = asyncHandler(async (req, res) => {
+  const allowedFields = [
+    "name",
+    "email",
+    "phoneNumber",
+    "addresses",
+    "profilePic",
+  ];
+
+  allowedFields.forEach((field) => {
+    if (req.body[field] !== undefined) {
+      req.user[field] = req.body[field];
+    }
+  });
+
+  await req.user.save();
+
   res.json({
-    _id: req.user._id,
-    name: req.user.name,
-    email: req.user.email,
-    role: req.user.role,
-    phoneNumber: req.user.phoneNumber,
-    addresses: req.user.addresses,
+    message: "User updated successfully",
+    user: buildAuthUser(req.user),
   });
 });
 
@@ -195,4 +212,5 @@ const changePassword = asyncHandler(async (req, res, next) =>{
   res.status(200).json({message: "تم تغيير كلمة المرور بنجاح"});
 })
 
-export default { register, login, logout, getMe, refreshTokenHandler, changePassword};
+export default { register, login, logout, getMe, refreshTokenHandler, changePassword, updateMe };
+

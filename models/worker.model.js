@@ -11,44 +11,86 @@ const workerSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
+        sparse: true,
+        lowercase: true,
     },
     phoneNumber: {
         type: String,
-        unique: true,
-        required: true
+        required: true,
     },
     password: {
         type: String,
         required: true
     },
-    role : {
-        type : String ,
-        default : "worker",
-        required : true
-    } ,
+    role: {
+        type: String,
+        default: "worker",
+        required: true
+    },
     refreshToken: {
         type: String,
     },
-    category:{
+    image: {
+        type: String,
+    },
+    category: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Category"
+        ref: "Category",
         // required: [true, "يجب تحديد تصنيف الفني"]
     },
     price: {
-    type: Number
-    // required: [true, 'يجب تحديد السعر المبدئي للخدمة']
-  },
-  rating: {
-    type: Number,
-    default: 0,
-    min: [0, 'التقييم لا يمكن أن يكون أقل من 0'],
-    max: [5, 'التقييم لا يمكن أن يتجاوز 5']
-  },
-  isOnline: {
-    type: Boolean,
-    default: false
-  },
+        type: Number,
+        // required: [true, 'يجب تحديد السعر المبدئي للخدمة']
+    },
+    rating: {
+        type: Number,
+        default: 0,
+        min: [0, 'التقييم لا يمكن أن يكون أقل من 0'],
+        max: [5, 'التقييم لا يمكن أن يتجاوز 5']
+    },
+    isOnline: {
+        type: Boolean,
+        default: false
+    },
   passwordChangedAt: Date,
+    isOnboarded: {
+        type: Boolean,
+        default: false
+    },
+    onboardingCompleted: {
+        type: Boolean,
+        default: false
+    },
+    approvalStatus: {
+        type: String,
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending'
+    },
+    approvedAt: {
+        type: Date,
+    },
+    address: {
+        type: String,
+    },
+    city: {
+        type: String,
+    },
+    yearsOfExperience: {
+        type: Number,
+    },
+    bio: {
+        type: String,
+    },
+    profilePic: {
+        type: String,
+        default: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+    },
+    nationalId: {
+        type: String,
+    },
+    certificates: [{
+        type: String,
+    }],
 }, {
     timestamps: true
 });
