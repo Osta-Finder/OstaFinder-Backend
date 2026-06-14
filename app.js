@@ -85,7 +85,7 @@ app.use("/auth", authRoute);
 app.use("/requests", requestRoutes);
 app.use("/categories", categoryRoute);
 app.use("/workers", workerRoute);
-app.use("/orders", reqOrderRoute);
+// app.use("/orders", reqOrderRoute);
 app.use("/upload", uploadRoute);
 app.use("/users", userRoute);
 

@@ -27,7 +27,7 @@ const requestSchema = new mongoose.Schema({
         ref: "User",
         required: true,
     },
-    clientName: {
+    clientName: { // ?
         type: String,
         required: true,
     },
@@ -40,10 +40,29 @@ const requestSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: [true, "يرجى تحديد فئة الخدمة"],
+    },
+    phoneNumber: {
+      type: String,
+      required: [true, "رقم الجوال مطلوب"],
+    },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: [true, "يرجى تحديد فئة الخدمة"],
+    },
+    phoneNumber: {
+      type: String,
+      required: [true, "رقم الجوال مطلوب"],
+    },
     date: {
         type: Date,
         required: true,
     },
+    description: { type: String, required: true },
     address: {
         type: String,
         required: true,

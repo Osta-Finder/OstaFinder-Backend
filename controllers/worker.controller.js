@@ -274,50 +274,77 @@ export const deleteWorkerWork = async (req, res, next) => {
 // @route   GET /workers
 // @access  Public
 export const getWorkers = asyncHandler(async (req, res, next) => {
-  let filter = {};
+    let filter = {};
+    
+    if (req.query.category) {
+      const decodedSlug = decodeURIComponent(req.query.category);
+      
+      const categoryObj = await categoryModel.findOne({ slug: decodedSlug });
 
-  if (req.query.keyword) {
-    const matchingCategories = await categoryModel
-      .find({
-        name: { $regex: req.query.keyword, $options: "i" },
-      })
-      .select("_id");
+      if (categoryObj) {
+        filter.category = categoryObj._id;
+        
+        delete req.query.category;
+      } else {
+        return res.status(200).json({
+          success: true,
+          results: 0,
+          pagination: {},
+          data: [],
+        });
+      }
+    }
 
-    const categoryIds = matchingCategories.map((cat) => cat._id);
+    // Search
+    if (req.query.keyword) {
+      const matchingCategories = await categoryModel
+        .find({
+          name: { $regex: req.query.keyword, $options: "i" },
+        })
+        .select("_id");
 
-    filter.$or = [
-      {
-        name: {
-          $regex: req.query.keyword,
-          $options: "i",
+      const categoryIds = matchingCategories.map((cat) => cat._id);
+
+      filter.$or = [
+        {
+          name: {
+            $regex: req.query.keyword,
+            $options: "i",
+          },
         },
-      },
-      {
-        category: {
-          $in: categoryIds,
+        {
+          category: {
+            $in: categoryIds,
+          },
         },
-      },
-    ];
-  }
+      ];
+    }
+    
+    // Build query
+    const apiFeatures = new ApiFeatures(workerModel.find(filter), req.query)
+      .filter()
+      .sort();
+      
+    // Get correct count after all filters
+    const countDocuments = await workerModel.countDocuments(
+      apiFeatures.mongooseQuery.getFilter(),
+    );
+    
+    // Pagination
+    apiFeatures.paginate(countDocuments);
+    
+    // Execute query
+    const workers = await apiFeatures.mongooseQuery.populate(
+      "category",
+      "name",
+    );
 
-  const apiFeatures = new ApiFeatures(workerModel.find(filter), req.query)
-    .filter()
-    .sort();
-
-  const countDocuments = await workerModel.countDocuments(
-    apiFeatures.mongooseQuery.getFilter(),
-  );
-
-  apiFeatures.paginate(countDocuments);
-
-  const workers = await apiFeatures.mongooseQuery.populate("category", "name");
-
-  res.status(200).json({
-    success: true,
-    results: workers.length,
-    pagination: apiFeatures.paginationResult,
-    data: workers,
-  });
+    res.status(200).json({
+      success: true,
+      results: workers.length,
+      pagination: apiFeatures.paginationResult,
+      data: workers,
+    });
 });
 
 // @desc    Get top rated worker in each category

@@ -20,20 +20,19 @@ export const createCategory = asyncHandler(async (req, res, next) => {
 // @route   GET /categories
 // @access  Public
 export const getCategories = asyncHandler(async (req, res, next) => {
-  const categories = await Category.find({ isActive: true }).sort({
-    createdAt: -1,
-  });
+  const categories = await Category.find({ isActive: true }).sort({createdAt: -1,});
 
   res
     .status(200)
     .json({ success: true, count: categories.length, data: categories });
 });
 
-// @desc    Get single category by ID
-// @route   GET /categories/:id
+// @desc    Get single category by name
+// @route   GET /categories/:name
 // @access  Public
-export const getCategoryById = asyncHandler(async (req, res, next) => {
-  const category = await Category.findById(req.params.id);
+export const getCategoryByName = asyncHandler(async (req, res, next) => {
+  const cleanSlug = decodeURIComponent(req.params.name);
+  const category = await Category.findOne({ slug: cleanSlug });
 
   if (!category) {
     return next(new ApiError("التصنيف غير موجود", 404));

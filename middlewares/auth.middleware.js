@@ -23,13 +23,21 @@ export const protect = asyncHandler(async (req, res, next) => {
     } else {
       currentUser = await User.findById(decoded.id);
     }
-
     // console.log("currentUser****************", currentUser);
     if (!currentUser) {
       return next(new ApiError("المستخدم لم يعد موجود", 401));
     }
-
     // console.log(currentUser);
+    // check if user changed password after token was created
+    if(currentUser.passwordChangedAt){
+      const passChangedTimestamp = parseInt(currentUser.passwordChangedAt.getTime() / 1000, 10);
+    
+      if(decoded.iat < passChangedTimestamp){
+        return next(new ApiError("تم تغيير كلمة المرور مؤخراً، يرجى تسجيل الدخول مرة أخرى", 401));
+      }
+    }
+
+
 
     req.user = currentUser;
     next();

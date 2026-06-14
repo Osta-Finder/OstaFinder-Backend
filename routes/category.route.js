@@ -4,7 +4,7 @@ import {
   createCategory,
   deleteCategory,
   getCategories,
-  getCategoryById,
+  getCategoryByName,
   updateCategory,
 } from "../controllers/category.controller.js";
 import {
@@ -18,10 +18,10 @@ const router = express.Router();
 router
   .route("/")
   .get( getCategories)
-  .post(protect, restrictTo("admin"), createCategoryValidator, createCategory);
+  .post( createCategoryValidator, createCategory);
+  router.get("/:name", getCategoryByName);
 router
   .route("/:id")
-  .get(getCategoryById)
   .put(protect, restrictTo("admin"), updateCategoryValidator, updateCategory)
   .delete(protect, restrictTo("admin"), deleteCategory);
 
