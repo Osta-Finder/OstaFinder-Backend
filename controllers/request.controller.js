@@ -143,17 +143,19 @@ export const getRequestById = asyncHandler(async (req, res, next) => {
 export const createRequest = asyncHandler(async (req, res, next) => {
   const { service, worker, date, address, amount, image } = req.body;
 
-  const workerExists = await Worker.findById(worker);
+  const workerExists = await Worker.findById(worker).populate("category");
   if (!workerExists) return next(new ApiError("الصنايعي غير موجود", 404));
 
   const request = await Request.create({
     service,
     worker,
     user: req.user.id,
+    clientName: req.user.name || "عميل",
     date,
     address,
     amount,
-    image,
+    category: workerExists.category?.name || workerExists.category?.toString() || "عام",
+    image: image || null,
   });
 
   const populated = await request.populate("worker", "name phoneNumber");

@@ -21,7 +21,8 @@ import {
   getWorkerPublicProfile,
   getWorkerPublicServices,
   getWorkerPublicWorks,
-  getWorkerPublicReviews
+  getWorkerPublicReviews,
+  updateWorkerProfile
 } from "../controllers/worker.profile.controller.js";
 
 import {
@@ -34,23 +35,18 @@ import {
 
 const router = express.Router();
 
+router.get("/public/:id", getWorkerPublicProfile);
+router.get("/public/:id/services", getWorkerPublicServices);
+router.get("/public/:id/works", getWorkerPublicWorks);
+router.get("/public/:id/reviews", getWorkerPublicReviews);
+
 router.get("/profile", protect, getWorkerProfile)
+router.put("/profile", protect, updateWorkerProfile)
 router.post("/onboarding", protect, upload.none(), submitOnboarding)
 router.get("/pending-approval", protect, restrictTo("admin"), getPendingWorkers)
 router.patch("/:workerId/approval", protect, restrictTo("admin"), updateWorkerApproval)
 router.get("/top-by-category", getTopWorkersByCategory)
 router.get("/", getWorkers)
-
-
-
-router.get("/public/:id", getWorkerPublicProfile);
-
-router.get("/public/:id/services", getWorkerPublicServices);
-
-router.get("/public/:id/works", getWorkerPublicWorks);
-
-router.get("/public/:id/reviews", getWorkerPublicReviews);
-
 router.use(verifyToken); // Disabled for testing
 
 // // Temporary testing middleware to mock authentication
