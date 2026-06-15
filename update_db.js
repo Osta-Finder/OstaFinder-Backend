@@ -3,7 +3,10 @@ import 'dotenv/config';
 
 mongoose.connect(process.env.DB_CONNECTION || 'mongodb://localhost:27017/OstaFinder').then(async () => {
   const db = mongoose.connection.getClient().db();
-  const users = await db.collection('users').find({ email: 'm.abdelkreem@ostafinder.com' }).toArray();
-  console.log(JSON.stringify(users, null, 2));
+  await db.collection('users').updateOne(
+    { email: 'mohamedabdelkarim1236@gamil.com' },
+    { $set: { role: 'admin' } }
+  );
+  console.log('Updated role to admin');
   process.exit(0);
 });
