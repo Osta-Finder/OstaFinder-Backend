@@ -405,6 +405,7 @@ export const submitOnboarding = asyncHandler(async (req, res, next) => {
     bio,
     nationalId,
     certificates,
+    price,
   } = req.body;
 
   if (!firstName || !lastName || !email || !phone) {
@@ -453,6 +454,9 @@ export const submitOnboarding = asyncHandler(async (req, res, next) => {
 
   if (yearsOfExperience) {
     updateData.yearsOfExperience = yearsOfExperience;
+  }
+  if (price) {
+    updateData.price = Number(price);
   }
   if (bio) {
     updateData.bio = bio;
