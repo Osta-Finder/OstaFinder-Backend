@@ -4,6 +4,7 @@ import Rating from "../models/rating.model.js";
 import Worker from "../models/worker.model.js";
 import Portfolio from "../models/portfolio.model.js";
 import ApiError from "../utils/ApiError.js";
+import ApiFeatures from "../utils/ApiFeatures.js";
 
 const getRatingMap = async (requests) => {
   const ids = requests.map((r) => r._id);
@@ -35,6 +36,7 @@ const formatRequest = (r, rating) => ({
   status: statusMap[r.status] || r.status,
   eta: r.eta || "",
   rating: rating || null,
+  description: r.description,
 });
 
 const getRequestFilter = async (req, next) => {
@@ -44,26 +46,40 @@ const getRequestFilter = async (req, next) => {
   return next(new ApiError("غير مصرح لك", 403));
 };
 
-// @desc    Get all requests (own for client/worker, all for admin)
-// @route   GET /requests?status=pending
+// @desc    Get all requests (own for client/worker, all for admin) with pagination
+// @route   GET /requests?status=pending&page=1&limit=10
 // @access  Private
 export const getRequests = asyncHandler(async (req, res, next) => {
   const filter = {};
   if (req.user.role !== "admin") filter.user = req.user.id;
   if (req.query.status) {
     const mapped = reverseStatusMap[req.query.status];
-    if (mapped) filter.status = mapped;
+    if (mapped) {
+      filter.status = mapped;
+      delete req.query.status;
+    }
   }
 
-  const requests = await Request.find(filter)
-    .populate("worker", "name phoneNumber")
-    .populate("user", "name phoneNumber")
-    .sort({ createdAt: -1 });
+  const countDocuments = await Request.countDocuments(filter);
 
+  const apiFeatures = new ApiFeatures(
+    Request.find(filter).populate("worker", "name phoneNumber").populate("user", "name phoneNumber"),
+    req.query
+  )
+    .filter()
+    .sort()
+    .paginate(countDocuments);
+
+  const requests = await apiFeatures.mongooseQuery;
   const ratingMap = await getRatingMap(requests);
   const data = requests.map((r) => formatRequest(r, ratingMap[r._id.toString()]));
 
-  res.status(200).json({ success: true, count: data.length, data });
+  res.status(200).json({
+    success: true,
+    count: data.length,
+    pagination: apiFeatures.paginationResult,
+    data,
+  });
 });
 
 // @desc    Get requests assigned to the logged-in worker
@@ -120,7 +136,7 @@ export const getRequestStats = asyncHandler(async (req, res, next) => {
 export const getRequestById = asyncHandler(async (req, res, next) => {
   const request = await Request.findById(req.params.id)
     .populate("worker", "name phoneNumber")
-    .populate("user", "name phoneNumber");
+    .populate("user", "name phoneNumber profilePic");
 
   if (!request) return next(new ApiError("الطلب غير موجود", 404));
 
@@ -143,19 +159,19 @@ export const getRequestById = asyncHandler(async (req, res, next) => {
 export const createRequest = asyncHandler(async (req, res, next) => {
     const { date, address, phoneNumber, description, category, amount, service, image } = req.body;
 
-    const {workerId} = req.params
-    const userId = req.user._id
+  const { workerId } = req.params
+  const userId = req.user._id
 
-    const workerExists = await Worker.findById(workerId);
-    if (!workerExists) {
-      return next(new ApiError("الصنايعي غير موجود", 404));
-    }
+  const workerExists = await Worker.findById(workerId);
+  if (!workerExists) {
+    return next(new ApiError("الصنايعي غير موجود", 404));
+  }
 
-    const finalCategory = workerExists.category || category;
+  const finalCategory = workerExists.category || category;
 
-    if (!finalCategory) {
-        return next(new ApiError("يجب تحديد فئة الخدمة", 400));
-    }
+  if (!finalCategory) {
+    return next(new ApiError("يجب تحديد فئة الخدمة", 400));
+  }
 
     let request = await Request.create({
      user: userId,
@@ -170,13 +186,13 @@ export const createRequest = asyncHandler(async (req, res, next) => {
         image: image || null,
     });
 
-    request = await request.populate("category", "name");
-    
-    res.status(201).json({
-      success: true,
-      message: "تم إرسال طلب الخدمة بنجاح وفي انتظار رد الفني",
-      data: request,
-    });
+  request = await request.populate("category", "name");
+
+  res.status(201).json({
+    success: true,
+    message: "تم إرسال طلب الخدمة بنجاح وفي انتظار رد الفني",
+    data: request,
+  });
 });
 
 // @desc    Update request status (accept, reject, complete, etc.)
