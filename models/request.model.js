@@ -22,83 +22,83 @@ export const reverseStatusMap = {
 };
 
 const requestSchema = new mongoose.Schema({
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-    },
-    clientName: { // ?
-        type: String,
-        required: true,
-    },
-    worker: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Worker",
-        required: true,
-    },
-    service: {
-        type: String,
-        required: true,
-    },
-    category: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
-      required: [true, "يرجى تحديد فئة الخدمة"],
-    },
-    phoneNumber: {
-      type: String,
-      required: [true, "رقم الجوال مطلوب"],
-    },
-    category: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
-      required: [true, "يرجى تحديد فئة الخدمة"],
-    },
-    phoneNumber: {
-      type: String,
-      required: [true, "رقم الجوال مطلوب"],
-    },
-    date: {
-        type: Date,
-        required: true,
-    },
-    description: { type: String, required: true },
-    address: {
-        type: String,
-        required: true,
-    },
-    amount: {
-        type: Number,
-        required: true,
-        min: 0,
-    },
-    category: {
-        type: String,
-        required: true,
-    },
-    distance: {
-        type: String,
-        default: "Unknown",
-    },
-    urgency: {
-        type: String,
-        enum: ["normal", "urgent"],
-        default: "normal",
-    },
-    status: {
-      type: String,
-      enum: ["pending", "accepted", "on_the_way", "in_progress", "completed", "rejected", "cancelled"],
-      default: "pending",
-    },
-    image: {
-      type: String,
-      default: null,
-    },
-    eta: {
-      type: String,
-      default: "",
-    },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
   },
+  clientName: { // ?
+    type: String,
+    required: true,
+  },
+  worker: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Worker",
+    required: true,
+  },
+  service: {
+    type: String,
+    required: true,
+  },
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category",
+    required: [true, "يرجى تحديد فئة الخدمة"],
+  },
+  phoneNumber: {
+    type: String,
+    required: [true, "رقم الجوال مطلوب"],
+  },
+  category: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category",
+    required: [true, "يرجى تحديد فئة الخدمة"],
+  },
+  phoneNumber: {
+    type: String,
+    required: [true, "رقم الجوال مطلوب"],
+  },
+  date: {
+    type: Date,
+    required: true,
+  },
+  description: { type: String, required: true },
+  address: {
+    type: String,
+    required: true,
+  },
+  amount: {
+    type: Number,
+    required: true,
+    min: 0,
+  },
+  category: {
+    type: String,
+    required: true,
+  },
+  distance: {
+    type: String,
+    default: "Unknown",
+  },
+  urgency: {
+    type: String,
+    enum: ["normal", "urgent"],
+    default: "normal",
+  },
+  status: {
+    type: String,
+    enum: ["pending", "accepted", "on_the_way", "in_progress", "completed", "rejected", "cancelled"],
+    default: "pending",
+  },
+  image: {
+    type: String,
+    default: null,
+  },
+  eta: {
+    type: String,
+    default: "",
+  },
+},
   {
     timestamps: true,
   },
