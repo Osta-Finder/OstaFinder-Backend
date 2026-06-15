@@ -52,9 +52,15 @@ const login = asyncHandler(async (req, res, next) => {
     user = await Worker.findOne({
       $or: [{ email: emailorPhone }, { phoneNumber: emailorPhone }],
     });
+  } else if (role === "admin") {
+    user = await User.findOne({
+      $or: [{ email: emailorPhone }, { phoneNumber: emailorPhone }],
+      role: "admin"
+    });
   } else {
     user = await User.findOne({
       $or: [{ email: emailorPhone }, { phoneNumber: emailorPhone }],
+      role: "client"
     });
   }
   if (!user || !(await user.comparedPassword(password))) {
