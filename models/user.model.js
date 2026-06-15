@@ -101,18 +101,6 @@ userSchema.methods.comparedPassword = function (pass) {
     return bcrypt.compare(pass, this.password);
 };
 
-// access token vs refresh token
 
-// userSchema.methods.generateAccessToken = function () {
-//     return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-//         expiresIn: "15m",
-//     });
-// };
-
-// userSchema.methods.generateRefreshToken = function () {
-//     return jwt.sign({ id: this._id }, process.env.JWT_SECRET_REFRSH, {
-//         expiresIn: "7d",
-//     });
-// };
 
 export default mongoose.model("User", userSchema);

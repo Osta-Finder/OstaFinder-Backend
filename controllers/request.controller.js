@@ -141,7 +141,7 @@ export const getRequestById = asyncHandler(async (req, res, next) => {
 // @route   POST /requests
 // @access  Private (client only)
 export const createRequest = asyncHandler(async (req, res, next) => {
-    const { date, address, phoneNumber, description, category, amount } = req.body;
+    const { date, address, phoneNumber, description, category, amount, service, image } = req.body;
 
     const {workerId} = req.params
     const userId = req.user._id
@@ -165,7 +165,9 @@ export const createRequest = asyncHandler(async (req, res, next) => {
         address,
         amount: amount || workerExists.price,
         phoneNumber,
-        description
+        description,
+        service,
+        image: image || null,
     });
 
     request = await request.populate("category", "name");

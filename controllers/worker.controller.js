@@ -275,7 +275,8 @@ export const deleteWorkerWork = async (req, res, next) => {
 // @access  Public
 export const getWorkers = asyncHandler(async (req, res, next) => {
     let filter = {};
-    
+    filter.approvalStatus = "approved";
+
     if (req.query.category) {
       const decodedSlug = decodeURIComponent(req.query.category);
       
