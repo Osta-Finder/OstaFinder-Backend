@@ -157,7 +157,7 @@ export const updateWorkerProfile = async (req, res) => {
         message: "Unauthorized",
       });
     }
-    const { name, bio, yearsOfExperience, price, phoneNumber, email, address, city } = req.body;
+    const { name, bio, yearsOfExperience, price, phoneNumber, email, address, city, image, profilePic, responseTime, workHoursStart, workHoursEnd } = req.body;
 
     const updateData = {};
     if (name !== undefined) updateData.name = name;
@@ -168,6 +168,18 @@ export const updateWorkerProfile = async (req, res) => {
     if (email !== undefined) updateData.email = email;
     if (address !== undefined) updateData.address = address;
     if (city !== undefined) updateData.city = city;
+    if (responseTime !== undefined) updateData.responseTime = responseTime;
+    if (workHoursStart !== undefined) updateData.workHoursStart = workHoursStart;
+    if (workHoursEnd !== undefined) updateData.workHoursEnd = workHoursEnd;
+
+    // Allow updating profile picture fields
+    if (image !== undefined) {
+      updateData.image = image;
+      updateData.profilePic = image;
+    } else if (profilePic !== undefined) {
+      updateData.image = profilePic;
+      updateData.profilePic = profilePic;
+    }
 
     const worker = await Worker.findByIdAndUpdate(workerId, updateData, {
       new: true,
@@ -192,4 +204,4 @@ export const updateWorkerProfile = async (req, res) => {
       message: error.message,
     });
   }
-};
+};

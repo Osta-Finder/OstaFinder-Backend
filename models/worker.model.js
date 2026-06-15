@@ -80,6 +80,18 @@ const workerSchema = new mongoose.Schema({
     bio: {
         type: String,
     },
+    responseTime: {
+        type: String,
+        default: "1",
+    },
+    workHoursStart: {
+        type: String,
+        default: "08:00",
+    },
+    workHoursEnd: {
+        type: String,
+        default: "22:00",
+    },
     profilePic: {
         type: String,
         default: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
