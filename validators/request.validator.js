@@ -2,10 +2,12 @@ import joi from "joi";
 import validatorMiddleware from "../middlewares/validator.middleware.js";
 
 const createRequestSchema = joi.object({
-  // service: joi.string().required().trim().messages({
-  //   "string.empty": "الخدمة مطلوبة",
-  //   "any.required": "الخدمة مطلوبة",
-  // }),
+  service: joi.string().required().trim().min(5).max(50).messages({
+    "string.empty": "الخدمة مطلوبة",
+    "any.required": "الخدمة مطلوبة",
+    "string.min": "الخدمة يجب أن تكون على الأقل 5 حروف",
+    "string.max": "الخدمة يجب ألا تتجاوز 50 حرف",
+  }),
   // worker: joi.string().required().hex().length(24).messages({
   //   "string.empty": "الصنايعي مطلوب",
   //   "any.required": "الصنايعي مطلوب",
@@ -28,8 +30,9 @@ const createRequestSchema = joi.object({
     "string.pattern.base": "رقم الهاتف يجب أن يتكون من 11 رقماً",
     "any.required": "رقم الهاتف مطلوب",
   }),
-  description: joi.string().required().trim().max(500).messages({
+  description: joi.string().required().trim().min(20).max(500).messages({
     "string.empty": "وصف المشكلة مطلوب",
+    "string.min": "الوصف يجب أن يكون على الأقل 20 حرف",
     "string.max": "الوصف يجب ألا يتجاوز 500 حرف",
     "any.required": "وصف المشكلة مطلوب",
   }),

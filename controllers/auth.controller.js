@@ -76,6 +76,8 @@ const login = asyncHandler(async (req, res, next) => {
     sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
+
+  user.isOnline = true;
   user.refreshToken = refreshToken;
   await user.save();
 
@@ -130,6 +132,7 @@ const logout = asyncHandler(async (req, res) => {
     secure: false,
     sameSite: "lax",
   });
+  req.user.isOnline = false;
   req.user.refreshToken = null;
   await req.user.save();
   res.json({ message: "Logged out" });
@@ -173,9 +176,9 @@ const changePassword = asyncHandler(async (req, res, next) => {
   // determine user model based on role
   let user;
   if (req.user.role === "worker") {
-    user = await Worker.findById(req.user._id)
+    user = await Worker.findById(req.user._id);
   } else {
-    user = await User.findById(req.user._id)
+    user = await User.findById(req.user._id);
   }
   if (!user) {
     return next(new ApiError("لا يوجد مستخدم", 404));
@@ -210,7 +213,14 @@ const changePassword = asyncHandler(async (req, res, next) => {
   await user.save();
 
   res.status(200).json({ message: "تم تغيير كلمة المرور بنجاح" });
-})
+});
 
-export default { register, login, logout, getMe, refreshTokenHandler, changePassword, updateMe };
-
+export default {
+  register,
+  login,
+  logout,
+  getMe,
+  refreshTokenHandler,
+  changePassword,
+  updateMe,
+};
