@@ -274,49 +274,62 @@ export const deleteWorkerWork = async (req, res, next) => {
 // @route   GET /workers
 // @access  Public
 export const getWorkers = asyncHandler(async (req, res, next) => {
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 15;
+  const skip = (page - 1) * limit;
+  const search = req.query.search || req.query.keyword || "";
+
   let filter = {};
 
-  if (req.query.keyword) {
+  if (search) {
     const matchingCategories = await categoryModel
       .find({
-        name: { $regex: req.query.keyword, $options: "i" },
+        name: { $regex: search, $options: "i" },
       })
       .select("_id");
 
     const categoryIds = matchingCategories.map((cat) => cat._id);
 
     filter.$or = [
-      {
-        name: {
-          $regex: req.query.keyword,
-          $options: "i",
-        },
-      },
-      {
-        category: {
-          $in: categoryIds,
-        },
-      },
+      { name: { $regex: search, $options: "i" } },
+      { phoneNumber: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+      { category: { $in: categoryIds } }
     ];
   }
 
-  const apiFeatures = new ApiFeatures(workerModel.find(filter), req.query)
-    .filter()
-    .sort();
+  // Preserve other query filters if they exist (excluding page, limit, search, keyword, sort)
+  const queryObj = { ...req.query };
+  const excludedFields = ['page', 'sort', 'limit', 'fields', 'search', 'keyword'];
+  excludedFields.forEach(el => delete queryObj[el]);
+  
+  if (Object.keys(queryObj).length > 0) {
+    filter = { ...filter, ...queryObj };
+  }
 
-  const countDocuments = await workerModel.countDocuments(
-    apiFeatures.mongooseQuery.getFilter(),
-  );
+  const total = await workerModel.countDocuments(filter);
+  const pages = Math.ceil(total / limit) || 1;
 
-  apiFeatures.paginate(countDocuments);
+  // Sorting
+  let sortBy = { createdAt: -1 };
+  if (req.query.sort) {
+    sortBy = req.query.sort.split(',').join(' ');
+  }
 
-  const workers = await apiFeatures.mongooseQuery.populate("category", "name");
+  const workers = await workerModel
+    .find(filter)
+    .populate("category", "name")
+    .sort(sortBy)
+    .skip(skip)
+    .limit(limit);
 
   res.status(200).json({
     success: true,
-    results: workers.length,
-    pagination: apiFeatures.paginationResult,
     data: workers,
+    total,
+    pages,
+    page,
+    limit,
   });
 });
 
