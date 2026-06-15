@@ -36,6 +36,7 @@ const formatRequest = (r, rating) => ({
   status: statusMap[r.status] || r.status,
   eta: r.eta || "",
   rating: rating || null,
+  description: r.description,
 });
 
 const getRequestFilter = async (req, next) => {
@@ -135,7 +136,7 @@ export const getRequestStats = asyncHandler(async (req, res, next) => {
 export const getRequestById = asyncHandler(async (req, res, next) => {
   const request = await Request.findById(req.params.id)
     .populate("worker", "name phoneNumber")
-    .populate("user", "name phoneNumber");
+    .populate("user", "name phoneNumber profilePic");
 
   if (!request) return next(new ApiError("الطلب غير موجود", 404));
 
@@ -156,40 +157,40 @@ export const getRequestById = asyncHandler(async (req, res, next) => {
 // @route   POST /requests
 // @access  Private (client only)
 export const createRequest = asyncHandler(async (req, res, next) => {
-    const { date, address, phoneNumber, description, category, amount } = req.body;
+  const { date, address, phoneNumber, description, category, amount } = req.body;
 
-    const {workerId} = req.params
-    const userId = req.user._id
+  const { workerId } = req.params
+  const userId = req.user._id
 
-    const workerExists = await Worker.findById(workerId);
-    if (!workerExists) {
-      return next(new ApiError("الصنايعي غير موجود", 404));
-    }
+  const workerExists = await Worker.findById(workerId);
+  if (!workerExists) {
+    return next(new ApiError("الصنايعي غير موجود", 404));
+  }
 
-    const finalCategory = workerExists.category || category;
+  const finalCategory = workerExists.category || category;
 
-    if (!finalCategory) {
-        return next(new ApiError("يجب تحديد فئة الخدمة", 400));
-    }
+  if (!finalCategory) {
+    return next(new ApiError("يجب تحديد فئة الخدمة", 400));
+  }
 
-    let request = await Request.create({
-     user: userId,
-        worker: workerId,
-        category: finalCategory, 
-        date,
-        address,
-        amount: amount || workerExists.price,
-        phoneNumber,
-        description
-    });
+  let request = await Request.create({
+    user: userId,
+    worker: workerId,
+    category: finalCategory,
+    date,
+    address,
+    amount: amount || workerExists.price,
+    phoneNumber,
+    description
+  });
 
-    request = await request.populate("category", "name");
-    
-    res.status(201).json({
-      success: true,
-      message: "تم إرسال طلب الخدمة بنجاح وفي انتظار رد الفني",
-      data: request,
-    });
+  request = await request.populate("category", "name");
+
+  res.status(201).json({
+    success: true,
+    message: "تم إرسال طلب الخدمة بنجاح وفي انتظار رد الفني",
+    data: request,
+  });
 });
 
 // @desc    Update request status (accept, reject, complete, etc.)
