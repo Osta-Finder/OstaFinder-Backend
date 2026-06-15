@@ -4,6 +4,7 @@ import Rating from "../models/rating.model.js";
 import Worker from "../models/worker.model.js";
 import Portfolio from "../models/portfolio.model.js";
 import ApiError from "../utils/ApiError.js";
+import ApiFeatures from "../utils/ApiFeatures.js";
 
 const getRatingMap = async (requests) => {
   const ids = requests.map((r) => r._id);
@@ -45,26 +46,40 @@ const getRequestFilter = async (req, next) => {
   return next(new ApiError("غير مصرح لك", 403));
 };
 
-// @desc    Get all requests (own for client/worker, all for admin)
-// @route   GET /requests?status=pending
+// @desc    Get all requests (own for client/worker, all for admin) with pagination
+// @route   GET /requests?status=pending&page=1&limit=10
 // @access  Private
 export const getRequests = asyncHandler(async (req, res, next) => {
   const filter = {};
   if (req.user.role !== "admin") filter.user = req.user.id;
   if (req.query.status) {
     const mapped = reverseStatusMap[req.query.status];
-    if (mapped) filter.status = mapped;
+    if (mapped) {
+      filter.status = mapped;
+      delete req.query.status;
+    }
   }
 
-  const requests = await Request.find(filter)
-    .populate("worker", "name phoneNumber")
-    .populate("user", "name phoneNumber")
-    .sort({ createdAt: -1 });
+  const countDocuments = await Request.countDocuments(filter);
 
+  const apiFeatures = new ApiFeatures(
+    Request.find(filter).populate("worker", "name phoneNumber").populate("user", "name phoneNumber"),
+    req.query
+  )
+    .filter()
+    .sort()
+    .paginate(countDocuments);
+
+  const requests = await apiFeatures.mongooseQuery;
   const ratingMap = await getRatingMap(requests);
   const data = requests.map((r) => formatRequest(r, ratingMap[r._id.toString()]));
 
-  res.status(200).json({ success: true, count: data.length, data });
+  res.status(200).json({
+    success: true,
+    count: data.length,
+    pagination: apiFeatures.paginationResult,
+    data,
+  });
 });
 
 // @desc    Get requests assigned to the logged-in worker
