@@ -219,25 +219,32 @@ export const updateRequestStatus = asyncHandler(async (req, res, next) => {
   );
 
   if (req.body.status === "completed") {
+    const populatedRequest = await Request.findById(request._id)
+      .populate("user", "name")
+      .populate("category", "name");
+
+    const clientName = populatedRequest?.user?.name || "عميل المنصة";
+    const categoryName = populatedRequest?.category?.name || "عام";
+
     const existingPortfolio = await Portfolio.findOne({
       worker: request.worker,
       title: request.service,
-      clientName: request.clientName,
+      clientName: clientName,
       source: "platform",
     });
     if (!existingPortfolio) {
       await Portfolio.create({
         worker: request.worker,
         title: request.service,
-        category: request.category,
-        clientName: request.clientName,
+        category: categoryName,
+        clientName: clientName,
         description: "تم إنجاز هذا العمل بنجاح عبر منصة أوسطى فايندر.",
         date: new Date(),
         source: "platform",
         status: "completed",
         location: request.address,
         price: request.amount || 0,
-        images: [],
+        images: request.image ? [request.image] : [],
       });
     }
   }

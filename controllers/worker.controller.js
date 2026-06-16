@@ -22,37 +22,100 @@ export const getDashboardStats = async (req, res, next) => {
       return next(new ApiError("Unauthorized", 401));
     }
 
-    const totalRequests = await Request.countDocuments({ worker: workerId });
-    const completedRequests = await Request.countDocuments({
+    const now = new Date();
+    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    // 1. Total Requests
+    const currentMonthRequests = await Request.countDocuments({
+      worker: workerId,
+      createdAt: { $gte: startOfCurrentMonth },
+    });
+    const prevMonthRequests = await Request.countDocuments({
+      worker: workerId,
+      createdAt: { $gte: startOfPrevMonth, $lt: startOfCurrentMonth },
+    });
+
+    let requestsChange = 0;
+    if (prevMonthRequests > 0) {
+      requestsChange = Math.round(((currentMonthRequests - prevMonthRequests) / prevMonthRequests) * 100);
+    } else if (currentMonthRequests > 0) {
+      requestsChange = 100;
+    }
+    const requestsChangeStr = requestsChange >= 0 ? `+${requestsChange}%` : `${requestsChange}%`;
+
+    // 2. Completed / Employment Rate
+    const currentMonthCompleted = await Request.countDocuments({
       worker: workerId,
       status: "completed",
+      createdAt: { $gte: startOfCurrentMonth },
     });
-    const totalEarningsResult = await Request.aggregate([
+    const prevMonthCompleted = await Request.countDocuments({
+      worker: workerId,
+      status: "completed",
+      createdAt: { $gte: startOfPrevMonth, $lt: startOfCurrentMonth },
+    });
+
+    const currentEmploymentRate = currentMonthRequests > 0
+      ? Math.round((currentMonthCompleted / currentMonthRequests) * 100)
+      : 0;
+    const prevEmploymentRate = prevMonthRequests > 0
+      ? Math.round((prevMonthCompleted / prevMonthRequests) * 100)
+      : 0;
+
+    let rateChange = currentEmploymentRate - prevEmploymentRate;
+    const rateChangeStr = rateChange >= 0 ? `+${rateChange}%` : `${rateChange}%`;
+
+    // 3. Earnings (using correct amount field!)
+    const currentMonthEarningsResult = await Request.aggregate([
       {
         $match: {
           worker: new mongoose.Types.ObjectId(workerId),
           status: "completed",
-          price: { $ne: null },
+          amount: { $ne: null },
+          createdAt: { $gte: startOfCurrentMonth },
         },
       },
-      { $group: { _id: null, total: { $sum: "$price" } } },
+      { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
-    const totalEarnings = totalEarningsResult[0]?.total || 0;
+    const currentMonthEarnings = currentMonthEarningsResult[0]?.total || 0;
+
+    const prevMonthEarningsResult = await Request.aggregate([
+      {
+        $match: {
+          worker: new mongoose.Types.ObjectId(workerId),
+          status: "completed",
+          amount: { $ne: null },
+          createdAt: { $gte: startOfPrevMonth, $lt: startOfCurrentMonth },
+        },
+      },
+      { $group: { _id: null, total: { $sum: "$amount" } } },
+    ]);
+    const prevMonthEarnings = prevMonthEarningsResult[0]?.total || 0;
+
+    let earningsChange = 0;
+    if (prevMonthEarnings > 0) {
+      earningsChange = Math.round(((currentMonthEarnings - prevMonthEarnings) / prevMonthEarnings) * 100);
+    } else if (currentMonthEarnings > 0) {
+      earningsChange = 100;
+    }
+    const earningsChangeStr = earningsChange >= 0 ? `+${earningsChange}%` : `${earningsChange}%`;
 
     const stats = {
-      totalOrders: { value: totalRequests, change: "+0%", period: "هذا الشهر" },
+      totalOrders: {
+        value: currentMonthRequests,
+        change: requestsChangeStr,
+        period: "هذا الشهر",
+      },
       employmentRate: {
-        value:
-          totalRequests > 0
-            ? `${Math.round((completedRequests / totalRequests) * 100)}%`
-            : "0%",
-        change: "+0%",
+        value: `${currentEmploymentRate}%`,
+        change: rateChangeStr,
         period: "هذا الشهر",
       },
       totalEarnings: {
-        value: totalEarnings,
+        value: currentMonthEarnings,
         currency: "ج.م",
-        change: "+0%",
+        change: earningsChangeStr,
         period: "هذا الشهر",
       },
     };
@@ -95,7 +158,9 @@ export const getIncomingRequests = async (req, res, next) => {
     const requests = await Request.find({
       worker: workerId,
       status: { $in: ["pending", "awaiting_approval"] },
-    }).sort({ createdAt: -1 });
+    })
+      .populate("user", "name profilePic")
+      .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, data: requests });
   } catch (error) {
@@ -121,6 +186,37 @@ export const updateRequestStatus = async (req, res, next) => {
 
     if (!request) {
       return next(new ApiError("Request not found", 404));
+    }
+
+    if (status === "completed") {
+      const populatedRequest = await Request.findById(request._id)
+        .populate("user", "name")
+        .populate("category", "name");
+
+      const clientName = populatedRequest?.user?.name || "عميل المنصة";
+      const categoryName = populatedRequest?.category?.name || "عام";
+
+      const existingPortfolio = await Portfolio.findOne({
+        worker: request.worker,
+        title: request.service,
+        clientName: clientName,
+        source: "platform",
+      });
+      if (!existingPortfolio) {
+        await Portfolio.create({
+          worker: request.worker,
+          title: request.service,
+          category: categoryName,
+          clientName: clientName,
+          description: "تم إنجاز هذا العمل بنجاح عبر منصة أوسطى فايندر.",
+          date: new Date(),
+          source: "platform",
+          status: "completed",
+          location: request.address,
+          price: request.amount || 0,
+          images: request.image ? [request.image] : [],
+        });
+      }
     }
 
     res.status(200).json({ success: true, data: request });

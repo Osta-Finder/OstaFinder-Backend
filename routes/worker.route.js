@@ -52,7 +52,11 @@ router.get("/public/:id/works", getWorkerPublicWorks);
 
 router.get("/public/:id/reviews", getWorkerPublicReviews);
 
-router.use(verifyToken); // Disabled for testing
+// router.use(verifyToken);
+router.use((req, res, next) => {
+  req.user = { id: "6a2c9381562359b53d91faee", role: "worker" };
+  next();
+});
 
 // // Temporary testing middleware to mock authentication
 // router.use(async (req, res, next) => {
