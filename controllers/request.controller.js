@@ -25,7 +25,7 @@ const getRatingMap = async (requests) => {
 
 const formatRequest = (r, rating) => ({
   _id: r._id,
-  requestNumber: r.requestNumber,
+  requestNumber: r._id.toString().slice(0, 5).toUpperCase(),
   service: r.service,
   worker: r.worker,
   user: r.user,

@@ -12,7 +12,6 @@ import categoryRoutes from "./routes/category.route.js";
 import requestRoutes from "./routes/request.route.js";
 import categoryRoute from "./routes/category.route.js";
 import workerRoute from "./routes/worker.route.js"
-import reqOrderRoute from "./routes/reqOrder.route.js"
 import uploadRoute from "./routes/upload.route.js"
 import userRoute from "./routes/user.route.js"
 import aiRoute from "./routes/ai.route.js"
@@ -86,7 +85,6 @@ app.use("/auth", authRoute);
 app.use("/requests", requestRoutes);
 app.use("/categories", categoryRoute);
 app.use("/workers", workerRoute);
-// app.use("/orders", reqOrderRoute);
 app.use("/upload", uploadRoute);
 app.use("/users", userRoute);
 app.use("/ai", aiRoute);
