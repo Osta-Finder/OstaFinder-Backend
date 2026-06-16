@@ -163,6 +163,22 @@ const updateMe = asyncHandler(async (req, res) => {
       req.user[field] = req.body[field];
     }
   });
+  const emailOrPhoneExists = async (email, phoneNumber) => {
+    let query = {
+      _id: { $ne: req.user._id },
+    };
+
+    if (email) {
+      query.email = email;
+    }
+
+    if (phoneNumber) {
+      query.phoneNumber = phoneNumber;
+    }
+
+    const existingUser = await User.findOne(query);
+    return !!existingUser;
+  };
 
   await req.user.save();
 
@@ -220,6 +236,49 @@ const changePassword = asyncHandler(async (req, res, next) => {
   res.status(200).json({ message: "تم تغيير كلمة المرور بنجاح" });
 });
 
+const updateAddress = asyncHandler(async (req, res, next) => {
+  const { addressId } = req.params;
+  const addressIndex = req.user.addresses.findIndex(
+    (addr) => addr._id.toString() === addressId
+  );
+
+  if (addressIndex === -1) {
+    return next(new ApiError("Address not found", 404));
+  }
+
+  if (req.body.isDefault) {
+    req.user.addresses.forEach((addr) => {
+      addr.isDefault = false;
+    });
+  }
+
+  const address = req.user.addresses[addressIndex];
+  const fields = [
+    "title",
+    "address",
+    "street",
+    "city",
+    "area",
+    "buildingNumber",
+    "floor",
+    "apartment",
+    "isDefault",
+  ];
+
+  fields.forEach((field) => {
+    if (req.body[field] !== undefined) {
+      address[field] = req.body[field];
+    }
+  });
+
+  await req.user.save();
+
+  res.status(200).json({
+    message: "Address updated successfully",
+    user: buildAuthUser(req.user),
+  });
+});
+
 export default {
   register,
   login,
@@ -228,4 +287,5 @@ export default {
   refreshTokenHandler,
   changePassword,
   updateMe,
+  updateAddress,
 };
