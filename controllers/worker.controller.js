@@ -586,3 +586,58 @@ export const updateWorkerApproval = asyncHandler(async (req, res, next) => {
     data: updatedWorker,
   });
 });
+
+// ============================================
+// ADMIN — WORKERS LIST WITH PAGINATION
+// ============================================
+// @desc    Get paginated list of workers for the admin dashboard
+// @route   GET /workers/admin
+// @access  Private/Admin
+export const getAdminWorkers = asyncHandler(async (req, res, next) => {
+  const page  = Math.max(1, parseInt(req.query.page,  10) || 1);
+  const limit = Math.max(1, parseInt(req.query.limit, 10) || 15);
+  const skip  = (page - 1) * limit;
+  const search = (req.query.search || req.query.keyword || "").trim();
+
+  // ── Build filter ──────────────────────────────────────────────────────────
+  let filter = {};
+
+  if (search) {
+    // Match categories by name first to allow filtering by category keyword
+    const matchingCategories = await categoryModel
+      .find({ name: { $regex: search, $options: "i" } })
+      .select("_id");
+
+    const categoryIds = matchingCategories.map((c) => c._id);
+
+    filter.$or = [
+      { name:        { $regex: search, $options: "i" } },
+      { email:       { $regex: search, $options: "i" } },
+      { phoneNumber: { $regex: search, $options: "i" } },
+      ...(categoryIds.length ? [{ category: { $in: categoryIds } }] : []),
+    ];
+  }
+
+  // ── Query ─────────────────────────────────────────────────────────────────
+  const [total, workers] = await Promise.all([
+    workerModel.countDocuments(filter),
+    workerModel
+      .find(filter)
+      .populate("category", "name")
+      .select("-password -refreshToken")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+  ]);
+
+  const pages = Math.ceil(total / limit) || 1;
+
+  res.status(200).json({
+    success: true,
+    data:  workers,
+    total,
+    pages,
+    page,
+    limit,
+  });
+});
