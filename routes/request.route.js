@@ -24,6 +24,7 @@ import {
   createRatingValidator,
   updateRatingValidator,
 } from "../validators/rating.validator.js";
+import { protect } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
@@ -34,7 +35,7 @@ router.get("/my-worker", getMyWorkerRequests);
 router
   .route("/")
   .get(getRequests)
-  .post(createRequestValidator, createRequest);
+router.post("/:workerId", protect, createRequestValidator, createRequest);
 router.get("/:id", getRequestById);
 router.patch("/:id/status", updateStatusValidator, updateRequestStatus);
 router.patch("/:id/cancel", cancelRequest);

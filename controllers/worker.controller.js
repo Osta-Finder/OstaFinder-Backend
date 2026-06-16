@@ -274,50 +274,78 @@ export const deleteWorkerWork = async (req, res, next) => {
 // @route   GET /workers
 // @access  Public
 export const getWorkers = asyncHandler(async (req, res, next) => {
-  let filter = {};
+    let filter = {};
+    filter.approvalStatus = "approved";
 
-  if (req.query.keyword) {
-    const matchingCategories = await categoryModel
-      .find({
-        name: { $regex: req.query.keyword, $options: "i" },
-      })
-      .select("_id");
+    if (req.query.category) {
+      const decodedSlug = decodeURIComponent(req.query.category);
+      
+      const categoryObj = await categoryModel.findOne({ slug: decodedSlug });
 
-    const categoryIds = matchingCategories.map((cat) => cat._id);
+      if (categoryObj) {
+        filter.category = categoryObj._id;
+        
+        delete req.query.category;
+      } else {
+        return res.status(200).json({
+          success: true,
+          results: 0,
+          pagination: {},
+          data: [],
+        });
+      }
+    }
 
-    filter.$or = [
-      {
-        name: {
-          $regex: req.query.keyword,
-          $options: "i",
+    // Search
+    if (req.query.keyword) {
+      const matchingCategories = await categoryModel
+        .find({
+          name: { $regex: req.query.keyword, $options: "i" },
+        })
+        .select("_id");
+
+      const categoryIds = matchingCategories.map((cat) => cat._id);
+
+      filter.$or = [
+        {
+          name: {
+            $regex: req.query.keyword,
+            $options: "i",
+          },
         },
-      },
-      {
-        category: {
-          $in: categoryIds,
+        {
+          category: {
+            $in: categoryIds,
+          },
         },
-      },
-    ];
-  }
+      ];
+    }
+    
+    // Build query
+    const apiFeatures = new ApiFeatures(workerModel.find(filter), req.query)
+      .filter()
+      .sort();
+      
+    // Get correct count after all filters
+    const countDocuments = await workerModel.countDocuments(
+      apiFeatures.mongooseQuery.getFilter(),
+    );
+    
+    // Pagination
+    apiFeatures.paginate(countDocuments);
+    
+    // Execute query
+    const workers = await apiFeatures.mongooseQuery.populate(
+      "category",
+      "name",
+    );
 
-  const apiFeatures = new ApiFeatures(workerModel.find(filter), req.query)
-    .filter()
-    .sort();
-
-  const countDocuments = await workerModel.countDocuments(
-    apiFeatures.mongooseQuery.getFilter(),
-  );
-
-  apiFeatures.paginate(countDocuments);
-
-  const workers = await apiFeatures.mongooseQuery.populate("category", "name");
-
-  res.status(200).json({
-    success: true,
-    results: workers.length,
-    pagination: apiFeatures.paginationResult,
-    data: workers,
-  });
+    res.status(200).json({
+      success: true,
+      results: workers.length,
+      pagination: apiFeatures.paginationResult,
+      data: workers,
+    });
 });
 
 // @desc    Get top rated worker in each category
@@ -377,6 +405,7 @@ export const submitOnboarding = asyncHandler(async (req, res, next) => {
     bio,
     nationalId,
     certificates,
+    price,
   } = req.body;
 
   if (!firstName || !lastName || !email || !phone) {
@@ -425,6 +454,9 @@ export const submitOnboarding = asyncHandler(async (req, res, next) => {
 
   if (yearsOfExperience) {
     updateData.yearsOfExperience = yearsOfExperience;
+  }
+  if (price) {
+    updateData.price = Number(price);
   }
   if (bio) {
     updateData.bio = bio;
@@ -552,5 +584,60 @@ export const updateWorkerApproval = asyncHandler(async (req, res, next) => {
     success: true,
     message: `Worker ${status} successfully`,
     data: updatedWorker,
+  });
+});
+
+// ============================================
+// ADMIN — WORKERS LIST WITH PAGINATION
+// ============================================
+// @desc    Get paginated list of workers for the admin dashboard
+// @route   GET /workers/admin
+// @access  Private/Admin
+export const getAdminWorkers = asyncHandler(async (req, res, next) => {
+  const page  = Math.max(1, parseInt(req.query.page,  10) || 1);
+  const limit = Math.max(1, parseInt(req.query.limit, 10) || 15);
+  const skip  = (page - 1) * limit;
+  const search = (req.query.search || req.query.keyword || "").trim();
+
+  // ── Build filter ──────────────────────────────────────────────────────────
+  let filter = {};
+
+  if (search) {
+    // Match categories by name first to allow filtering by category keyword
+    const matchingCategories = await categoryModel
+      .find({ name: { $regex: search, $options: "i" } })
+      .select("_id");
+
+    const categoryIds = matchingCategories.map((c) => c._id);
+
+    filter.$or = [
+      { name:        { $regex: search, $options: "i" } },
+      { email:       { $regex: search, $options: "i" } },
+      { phoneNumber: { $regex: search, $options: "i" } },
+      ...(categoryIds.length ? [{ category: { $in: categoryIds } }] : []),
+    ];
+  }
+
+  // ── Query ─────────────────────────────────────────────────────────────────
+  const [total, workers] = await Promise.all([
+    workerModel.countDocuments(filter),
+    workerModel
+      .find(filter)
+      .populate("category", "name")
+      .select("-password -refreshToken")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+  ]);
+
+  const pages = Math.ceil(total / limit) || 1;
+
+  res.status(200).json({
+    success: true,
+    data:  workers,
+    total,
+    pages,
+    page,
+    limit,
   });
 });

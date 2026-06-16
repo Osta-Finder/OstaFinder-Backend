@@ -27,10 +27,6 @@ const requestSchema = new mongoose.Schema({
         ref: "User",
         required: true,
     },
-    clientName: {
-        type: String,
-        required: true,
-    },
     worker: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Worker",
@@ -38,12 +34,22 @@ const requestSchema = new mongoose.Schema({
     },
     service: {
         type: String,
-        required: true,
+        required: true, 
+    },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: [true, "يرجى تحديد فئة الخدمة"],
+    },
+    phoneNumber: {
+      type: String,
+      required: [true, "رقم الجوال مطلوب"],
     },
     date: {
         type: Date,
         required: true,
     },
+    description: { type: String, required: true },
     address: {
         type: String,
         required: true,
@@ -52,10 +58,6 @@ const requestSchema = new mongoose.Schema({
         type: Number,
         required: true,
         min: 0,
-    },
-    category: {
-        type: String,
-        required: true,
     },
     distance: {
         type: String,
@@ -84,15 +86,5 @@ const requestSchema = new mongoose.Schema({
     timestamps: true,
   },
 );
-
-requestSchema.pre("save", async function () {
-  if (this.isNew && !this.requestNumber) {
-    const lastRequest = await mongoose
-      .model("Request")
-      .findOne()
-      .sort({ requestNumber: -1 });
-    this.requestNumber = lastRequest ? lastRequest.requestNumber + 1 : 101;
-  }
-});
 
 export default mongoose.model("Request", requestSchema);

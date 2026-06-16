@@ -74,6 +74,7 @@ const userSchema = new mongoose.Schema({
     refreshToken: {
         type: String,
     },
+    passwordChangedAt: Date,
     addresses: {
         type: [addressSchema],
         default: [],
@@ -82,6 +83,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
     },
+    isDeleted: {
+        type: Boolean,
+        default: false,
+    },
+    deletedAt: {
+        type: Date,
+        default: null,
+    },
 }, {
     timestamps: true
 });
@@ -89,24 +98,17 @@ const userSchema = new mongoose.Schema({
 userSchema.pre("save", async function () {
     if (!this.isModified("password")) return;
     this.password = await bcrypt.hash(this.password, 12);
+
+    if (!this.isNew) {
+    this.passwordChangedAt = Date.now() - 1000; 
+  }
+//   next()
 });
 
 userSchema.methods.comparedPassword = function (pass) {
     return bcrypt.compare(pass, this.password);
 };
 
-// access token vs refresh token
 
-// userSchema.methods.generateAccessToken = function () {
-//     return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-//         expiresIn: "15m",
-//     });
-// };
-
-// userSchema.methods.generateRefreshToken = function () {
-//     return jwt.sign({ id: this._id }, process.env.JWT_SECRET_REFRSH, {
-//         expiresIn: "7d",
-//     });
-// };
 
 export default mongoose.model("User", userSchema);

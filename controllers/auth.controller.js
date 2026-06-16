@@ -52,6 +52,11 @@ const login = asyncHandler(async (req, res, next) => {
     user = await Worker.findOne({
       $or: [{ email: emailorPhone }, { phoneNumber: emailorPhone }],
     });
+  } else if (role === "admin") {
+    user = await User.findOne({
+      $or: [{ email: emailorPhone }, { phoneNumber: emailorPhone }],
+      role: "admin"
+    });
   } else {
     user = await User.findOne({
       $or: [{ email: emailorPhone }, { phoneNumber: emailorPhone }],
@@ -76,6 +81,8 @@ const login = asyncHandler(async (req, res, next) => {
     sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
+
+  user.isOnline = true;
   user.refreshToken = refreshToken;
   await user.save();
 
@@ -130,6 +137,7 @@ const logout = asyncHandler(async (req, res) => {
     secure: false,
     sameSite: "lax",
   });
+  req.user.isOnline = false;
   req.user.refreshToken = null;
   await req.user.save();
   res.json({ message: "Logged out" });
@@ -164,4 +172,60 @@ const updateMe = asyncHandler(async (req, res) => {
   });
 });
 
-export default { register, login, logout, getMe, updateMe, refreshTokenHandler };
+// Desc    Change password
+// Route   POST /auth/change-password
+// Access  Private
+const changePassword = asyncHandler(async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body;
+
+  // determine user model based on role
+  let user;
+  if (req.user.role === "worker") {
+    user = await Worker.findById(req.user._id);
+  } else {
+    user = await User.findById(req.user._id);
+  }
+  if (!user) {
+    return next(new ApiError("لا يوجد مستخدم", 404));
+  }
+
+  // verify current password
+  const isMatch = await user.comparedPassword(currentPassword);
+  if (!isMatch) {
+    return next(new ApiError("كلمة المرور الحالية غير صحيحة", 401));
+  }
+
+  // update to new password
+  user.password = newPassword;
+
+  // generate new tokens
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 15 * 60 * 1000,
+  });
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  res.status(200).json({ message: "تم تغيير كلمة المرور بنجاح" });
+});
+
+export default {
+  register,
+  login,
+  logout,
+  getMe,
+  refreshTokenHandler,
+  changePassword,
+  updateMe,
+};

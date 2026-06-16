@@ -52,6 +52,7 @@ const workerSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+  passwordChangedAt: Date,
     isOnboarded: {
         type: Boolean,
         default: false
@@ -109,24 +110,16 @@ const workerSchema = new mongoose.Schema({
 workerSchema.pre("save", async function () {
     if (!this.isModified("password")) return;
     this.password = await bcrypt.hash(this.password, 12);
+
+    if (!this.isNew) {
+    this.passwordChangedAt = Date.now() - 1000; 
+  }
+//   next()
 });
 
 workerSchema.methods.comparedPassword = function (pass) {
     return bcrypt.compare(pass, this.password);
 };
 
-// access token vs refresh token
-
-// workerSchema.methods.generateAccessToken = function () {
-//     return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-//         expiresIn: "15m",
-//     });
-// };
-
-// workerSchema.methods.generateRefreshToken = function () {
-//     return jwt.sign({ id: this._id }, process.env.JWT_SECRET_REFRSH, {
-//         expiresIn: "7d",
-//     });
-// };
 
 export default mongoose.model("Worker", workerSchema);

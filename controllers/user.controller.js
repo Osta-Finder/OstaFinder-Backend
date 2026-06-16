@@ -8,7 +8,7 @@ import ApiError from "../utils/ApiError.js";
 export const getAllUsers = asyncHandler(async (req, res) => {
   const { search, role, page = 1, limit = 20 } = req.query;
 
-  const filter = {};
+  const filter = { isDeleted: { $ne: true } };
   if (role) filter.role = role;
   if (search) {
     filter.$or = [
@@ -70,7 +70,7 @@ export const createUser = asyncHandler(async (req, res, next) => {
   });
 });
 
-// @desc    Delete user
+// @desc    Soft-delete user (sets isDeleted=true, does NOT remove from DB)
 // @route   DELETE /api/users/:id
 // @access  Admin
 export const deleteUser = asyncHandler(async (req, res, next) => {
@@ -82,6 +82,14 @@ export const deleteUser = asyncHandler(async (req, res, next) => {
     return next(new ApiError("لا يمكنك حذف حسابك الخاص", 400));
   }
 
-  await user.deleteOne();
+  if (user.isDeleted) {
+    return next(new ApiError("المستخدم محذوف بالفعل", 400));
+  }
+
+  // Soft delete — keep the record but mark as deleted
+  user.isDeleted = true;
+  user.deletedAt = new Date();
+  await user.save();
+
   res.status(200).json({ success: true, message: "تم حذف المستخدم بنجاح" });
 });

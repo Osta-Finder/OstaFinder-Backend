@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { getTopWorkersByCategory, getWorkers, submitOnboarding, getWorkerProfile, getPendingWorkers, updateWorkerApproval } from "../controllers/worker.controller.js";
+import { getTopWorkersByCategory, getWorkers, getAdminWorkers, submitOnboarding, getWorkerProfile, getPendingWorkers, updateWorkerApproval } from "../controllers/worker.controller.js";
 import { protect, restrictTo } from "../middlewares/auth.middleware.js";
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -44,6 +44,7 @@ router.get("/profile", protect, getWorkerProfile)
 router.put("/profile", protect, updateWorkerProfile)
 router.post("/onboarding", protect, upload.none(), submitOnboarding)
 router.get("/pending-approval", protect, restrictTo("admin"), getPendingWorkers)
+router.get("/admin", protect, restrictTo("admin"), getAdminWorkers)
 router.patch("/:workerId/approval", protect, restrictTo("admin"), updateWorkerApproval)
 router.get("/top-by-category", getTopWorkersByCategory)
 router.get("/", getWorkers)
