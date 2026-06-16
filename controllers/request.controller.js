@@ -25,7 +25,7 @@ const getRatingMap = async (requests) => {
 
 const formatRequest = (r, rating) => ({
   _id: r._id,
-  requestNumber: r._id.toString().slice(0, 5).toUpperCase(),
+  requestNumber: r._id.toString().slice(-5).toUpperCase(),
   service: r.service,
   worker: r.worker,
   user: r.user,
@@ -53,7 +53,15 @@ export const getRequests = asyncHandler(async (req, res, next) => {
   const filter = {};
   if (req.user.role !== "admin") filter.user = req.user.id;
   if (req.query.status) {
+    console.log("=== DEBUG STATUS FILTER ===");
+    console.log("raw query status:", JSON.stringify(req.query.status));
+    console.log("raw query status type:", typeof req.query.status);
+    console.log("status length:", req.query.status.length);
+    console.log("status char codes:", [...req.query.status].map(c => c.charCodeAt(0)));
+    console.log("reverseStatusMap keys:", Object.keys(reverseStatusMap).map(k => JSON.stringify(k)));
     const mapped = reverseStatusMap[req.query.status];
+    console.log("mapped result:", mapped);
+    console.log("=== END DEBUG ===");
     if (mapped) {
       filter.status = mapped;
       delete req.query.status;
