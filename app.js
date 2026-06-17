@@ -15,6 +15,7 @@ import workerRoute from "./routes/worker.route.js"
 import uploadRoute from "./routes/upload.route.js"
 import userRoute from "./routes/user.route.js"
 import aiRoute from "./routes/ai.route.js"
+import contactRoute from "./routes/contact.route.js"
 import Category from "./models/category.model.js"
 
 const app = express();
@@ -40,8 +41,9 @@ app.use(
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.DB_CONNECTION);
+    //await mongoose.connect("mongodb://127.0.0.1:27017/test");
     console.log("DB connected successful");
-    
+
     await seedCategories();
   } catch (err) {
     console.log("DB connection Failed");
@@ -89,6 +91,7 @@ app.use("/workers", workerRoute);
 app.use("/upload", uploadRoute);
 app.use("/users", userRoute);
 app.use("/ai", aiRoute);
+app.use("/contacts", contactRoute);
 
 //invalid route
 app.use((req, res, next) => {

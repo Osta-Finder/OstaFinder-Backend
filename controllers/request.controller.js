@@ -25,7 +25,7 @@ const getRatingMap = async (requests) => {
 
 const formatRequest = (r, rating) => ({
   _id: r._id,
-  requestNumber: r._id.toString().slice(0, 5).toUpperCase(),
+  requestNumber: r._id.toString().slice(-5).toUpperCase(),
   service: r.service,
   worker: r.worker,
   user: r.user,
@@ -53,7 +53,15 @@ export const getRequests = asyncHandler(async (req, res, next) => {
   const filter = {};
   if (req.user.role !== "admin") filter.user = req.user.id;
   if (req.query.status) {
+    console.log("=== DEBUG STATUS FILTER ===");
+    console.log("raw query status:", JSON.stringify(req.query.status));
+    console.log("raw query status type:", typeof req.query.status);
+    console.log("status length:", req.query.status.length);
+    console.log("status char codes:", [...req.query.status].map(c => c.charCodeAt(0)));
+    console.log("reverseStatusMap keys:", Object.keys(reverseStatusMap).map(k => JSON.stringify(k)));
     const mapped = reverseStatusMap[req.query.status];
+    console.log("mapped result:", mapped);
+    console.log("=== END DEBUG ===");
     if (mapped) {
       filter.status = mapped;
       delete req.query.status;
@@ -157,7 +165,7 @@ export const getRequestById = asyncHandler(async (req, res, next) => {
 // @route   POST /requests
 // @access  Private (client only)
 export const createRequest = asyncHandler(async (req, res, next) => {
-    const { date, address, phoneNumber, description, category, amount, service, image } = req.body;
+  const { date, address, phoneNumber, description, category, amount, service, image } = req.body;
 
   const { workerId } = req.params
   const userId = req.user._id
@@ -173,18 +181,18 @@ export const createRequest = asyncHandler(async (req, res, next) => {
     return next(new ApiError("يجب تحديد فئة الخدمة", 400));
   }
 
-    let request = await Request.create({
-     user: userId,
-        worker: workerId,
-        category: finalCategory, 
-        date,
-        address,
-        amount: amount || workerExists.price,
-        phoneNumber,
-        description,
-        service,
-        image: image || null,
-    });
+  let request = await Request.create({
+    user: userId,
+    worker: workerId,
+    category: finalCategory,
+    date,
+    address,
+    amount: amount || workerExists.price,
+    phoneNumber,
+    description,
+    service,
+    image: image || null,
+  });
 
   request = await request.populate("category", "name");
 

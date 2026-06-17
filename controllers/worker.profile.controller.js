@@ -147,3 +147,65 @@ export const getWorkerPublicReviews = async (req, res) => {
     });
   }
 };
+
+// ============================================
+// UPDATE WORKER PROFILE
+// ============================================
+export const updateWorkerProfile = async (req, res) => {
+  try {
+    const workerId = req.user?.id || req.user?._id;
+
+    if (!workerId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+    const { name, bio, yearsOfExperience, price, phoneNumber, email, address, city, image, profilePic, responseTime, workHoursStart, workHoursEnd } = req.body;
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (bio !== undefined) updateData.bio = bio;
+    if (yearsOfExperience !== undefined) updateData.yearsOfExperience = yearsOfExperience;
+    if (price !== undefined) updateData.price = price;
+    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
+    if (email !== undefined) updateData.email = email;
+    if (address !== undefined) updateData.address = address;
+    if (city !== undefined) updateData.city = city;
+    if (responseTime !== undefined) updateData.responseTime = responseTime;
+    if (workHoursStart !== undefined) updateData.workHoursStart = workHoursStart;
+    if (workHoursEnd !== undefined) updateData.workHoursEnd = workHoursEnd;
+
+    // Allow updating profile picture fields
+    if (image !== undefined) {
+      updateData.image = image;
+      updateData.profilePic = image;
+    } else if (profilePic !== undefined) {
+      updateData.image = profilePic;
+      updateData.profilePic = profilePic;
+    }
+
+    const worker = await Worker.findByIdAndUpdate(workerId, updateData, {
+      new: true,
+      runValidators: true,
+    }).populate("category");
+
+    if (!worker) {
+      return res.status(404).json({
+        success: false,
+        message: "Worker not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "تم تحديث الملف الشخصي بنجاح",
+      data: worker,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

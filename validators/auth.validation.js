@@ -80,7 +80,7 @@ export const loginSchema = Joi.object({
 
 });
 
-const addressSchema = Joi.object({
+export const addressSchema = Joi.object({
     _id: Joi.string(),
     title: Joi.string().trim().max(50),
     address: Joi.string().trim().required(),

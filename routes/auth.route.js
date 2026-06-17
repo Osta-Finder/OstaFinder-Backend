@@ -2,7 +2,7 @@ import express from 'express';
 
 import authController from '../controllers/auth.controller.js'
 import validate from '../middlewares/validator.middleware.js';
-import { loginSchema, registerSchema, updateMeSchema } from '../validators/auth.validation.js';
+import { loginSchema, registerSchema, updateMeSchema, addressSchema } from '../validators/auth.validation.js';
 import verifyToken from '../middlewares/verify.middleware.js';
 import { protect } from '../middlewares/auth.middleware.js';
 
@@ -15,6 +15,7 @@ router.post("/refresh", authController.refreshTokenHandler);
 router.get("/me", protect, authController.getMe);
 router.post("/change-password", protect, authController.changePassword);
 router.put("/me", protect, validate(updateMeSchema), authController.updateMe);
+router.put("/addresses/:addressId", protect, validate(addressSchema), authController.updateAddress);
 
 
 export default router;
