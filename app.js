@@ -32,7 +32,7 @@ app.use(
       "http://localhost:3000",
       "http://localhost:3001",
       "http://localhost:3002",
-      "https://ostafinder.vercel.app/",
+      "https://ostafinder.vercel.app",
     ],
     credentials: true,
   }),
