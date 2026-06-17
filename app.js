@@ -28,6 +28,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
+      "http://localhost:5174",
       "http://localhost:3000",
       "http://localhost:3001",
       "http://localhost:3002",
@@ -48,7 +49,7 @@ const connectDB = async () => {
     console.log("DB connection Failed");
     console.log(err.message);
 
-    process.exit(1);
+    // process.exit(1);
   }
 };
 

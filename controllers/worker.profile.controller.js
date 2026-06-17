@@ -93,6 +93,10 @@ export const getWorkerPublicWorks = async (req, res) => {
 
     const works = await Portfolio.find({
       worker: id,
+      $or: [
+        { approvalStatus: "approved" },
+        { source: "platform" }
+      ]
     }).sort({ createdAt: -1 });
 
     return res.status(200).json({

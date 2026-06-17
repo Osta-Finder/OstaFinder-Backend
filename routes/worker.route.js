@@ -14,7 +14,9 @@ import {
   getWorkerWorkById,
   addWorkerWork,
   updateWorkerWork,
-  deleteWorkerWork
+  deleteWorkerWork,
+  getPendingWorksApproval,
+  updateWorkApproval
 } from "../controllers/worker.controller.js";
 
 import {
@@ -46,6 +48,8 @@ router.post("/onboarding", protect, upload.none(), submitOnboarding)
 router.get("/pending-approval", protect, restrictTo("admin"), getPendingWorkers)
 router.get("/admin", protect, restrictTo("admin"), getAdminWorkers)
 router.patch("/:workerId/approval", protect, restrictTo("admin"), updateWorkerApproval)
+router.get("/works/pending-approval", protect, restrictTo("admin"), getPendingWorksApproval)
+router.patch("/works/:workId/approval", protect, restrictTo("admin"), updateWorkApproval)
 router.get("/top-by-category", getTopWorkersByCategory)
 router.get("/", getWorkers)
 router.use(verifyToken); // Disabled for testing
