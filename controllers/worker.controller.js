@@ -157,7 +157,6 @@ export const getIncomingRequests = async (req, res, next) => {
 
     const requests = await Request.find({
       worker: workerId,
-      status: { $in: ["pending", "awaiting_approval"] },
     })
       .populate("user", "name profilePic")
       .sort({ createdAt: -1 });
@@ -215,6 +214,7 @@ export const updateRequestStatus = async (req, res, next) => {
           location: request.address,
           price: request.amount || 0,
           images: request.image ? [request.image] : [],
+          approvalStatus: "approved",
         });
       }
     }
@@ -294,6 +294,7 @@ export const addWorkerWork = async (req, res, next) => {
       location,
       price,
       images: images || [],
+      approvalStatus: "pending",
     });
 
     res.status(201).json({ success: true, data: work });
@@ -326,7 +327,7 @@ export const updateWorkerWork = async (req, res, next) => {
 
     const work = await Portfolio.findOneAndUpdate(
       { _id: id, worker: workerId },
-      { ...updateData, source: "outside" },
+      { ...updateData, source: "outside", approvalStatus: "pending" },
       { new: true },
     );
 
@@ -735,5 +736,52 @@ export const getAdminWorkers = asyncHandler(async (req, res, next) => {
     pages,
     page,
     limit,
+  });
+});
+
+// ============================================
+// ADMIN — PORTFOLIOS APPROVAL
+// ============================================
+
+export const getPendingWorksApproval = asyncHandler(async (req, res, next) => {
+  const pendingWorks = await Portfolio.find({ approvalStatus: "pending" })
+    .populate("worker", "name email phoneNumber")
+    .sort({ createdAt: -1 });
+
+  res.status(200).json({
+    success: true,
+    results: pendingWorks.length,
+    data: pendingWorks,
+  });
+});
+
+export const updateWorkApproval = asyncHandler(async (req, res, next) => {
+  const { workId } = req.params;
+  const { status } = req.body;
+
+  if (!["approved", "rejected"].includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid status. Must be 'approved' or 'rejected'",
+    });
+  }
+
+  const updatedWork = await Portfolio.findByIdAndUpdate(
+    workId,
+    { approvalStatus: status },
+    { returnDocument: "after", runValidators: false }
+  ).populate("worker", "name email");
+
+  if (!updatedWork) {
+    return res.status(404).json({
+      success: false,
+      message: "Work not found",
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    message: `Work ${status} successfully`,
+    data: updatedWork,
   });
 });

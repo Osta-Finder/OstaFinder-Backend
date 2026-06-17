@@ -36,6 +36,11 @@ const portfolioSchema = new mongoose.Schema({
         enum: ["completed", "in_progress", "cancelled"],
         default: "completed",
     },
+    approvalStatus: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: "pending",
+    },
     location: {
         type: String,
         required: true,

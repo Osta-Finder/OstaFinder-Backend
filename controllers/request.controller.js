@@ -245,6 +245,7 @@ export const updateRequestStatus = asyncHandler(async (req, res, next) => {
         location: request.address,
         price: request.amount || 0,
         images: request.image ? [request.image] : [],
+        approvalStatus: "approved",
       });
     }
   }

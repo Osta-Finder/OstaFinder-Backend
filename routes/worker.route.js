@@ -14,7 +14,9 @@ import {
   getWorkerWorkById,
   addWorkerWork,
   updateWorkerWork,
-  deleteWorkerWork
+  deleteWorkerWork,
+  getPendingWorksApproval,
+  updateWorkApproval
 } from "../controllers/worker.controller.js";
 
 import {
@@ -39,6 +41,8 @@ router.post("/onboarding", protect, upload.none(), submitOnboarding)
 router.get("/pending-approval", protect, restrictTo("admin"), getPendingWorkers)
 router.get("/admin", protect, restrictTo("admin"), getAdminWorkers)
 router.patch("/:workerId/approval", protect, restrictTo("admin"), updateWorkerApproval)
+router.get("/works/pending-approval", protect, restrictTo("admin"), getPendingWorksApproval)
+router.patch("/works/:workId/approval", protect, restrictTo("admin"), updateWorkApproval)
 router.get("/top-by-category", getTopWorkersByCategory)
 router.get("/", getWorkers)
 
@@ -52,28 +56,7 @@ router.get("/public/:id/works", getWorkerPublicWorks);
 
 router.get("/public/:id/reviews", getWorkerPublicReviews);
 
-// router.use(verifyToken);
-router.use((req, res, next) => {
-  req.user = { id: "6a2c9381562359b53d91faee", role: "worker" };
-  next();
-});
-
-// // Temporary testing middleware to mock authentication
-// router.use(async (req, res, next) => {
-//   try {
-//     const worker = await Worker.findOne();
-//     if (!worker) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "No workers found in DB for testing.",
-//       });
-//     }
-//     req.user = { id: worker._id };
-//     next();
-//   } catch (err) {
-//     next(err);
-//   }
-// });
+router.use(protect);
 // Dashboard
 router.get("/stats", getDashboardStats);
 router.get("/dashboard-requests", getDashboardRequests);
